@@ -8,8 +8,11 @@ onUiLoaded(function () {
 
   const downloadSpan = document.createElement('span');
   downloadSpan.className = 'downloadImage cursor';
-  downloadSpan.innerHTML = '🡇';
   downloadSpan.title = 'Download Image';
+  downloadSpan.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 32 32">
+      <path fill="currentColor" stroke="currentColor" stroke-width="1.8" d="M26 24v4H6v-4H4v4a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2v-4zm0-10l-1.41-1.41L17 20.17V2h-2v18.17l-7.59-7.58L6 14l10 10l10-10z"></path>
+    </svg>`;
   modalControls.appendChild(downloadSpan);
 
   var SB = 'var(--primary-400)';
@@ -37,7 +40,6 @@ onUiLoaded(function () {
         overflow: hidden !important;
         backdrop-filter: blur(10px);
         background-color: rgba(0, 0, 0, 0.7) !important;
-        transition: opacity 0.2s ease;
       }
 
       #lightboxModal > img {
@@ -45,8 +47,13 @@ onUiLoaded(function () {
         height: auto !important;
         max-width: 100%;
         max-height: 100%;
+        opacity: 0;
         transform: translate(0px, 0px) scale(0);
-        transition: transform 0.5s ease;
+        transition: transform 0.5s ease, opacity 0.5s ease;
+      }
+
+      #lightboxModal > img:focus {
+        outline: none;
       }
 
       .modalZoom, .modalSave, .modalTileImage, .modalToggleLivePreview {
@@ -65,11 +72,12 @@ onUiLoaded(function () {
       .modalControls span {
         z-index: 9999;
         color: ${SB} !important;
-        position: relative;
         pointer-events: auto;
         filter: brightness(1);
         text-shadow: 0px 0px 0.5rem black !important;
         transition: 0.3s ease;
+        position: absolute !important;
+        width: auto !important;
       }
 
       .modalControls span:hover {
@@ -79,7 +87,15 @@ onUiLoaded(function () {
       }
 
       .modalClose {
-        font-size: 50px !important;
+        top: 0 !important;
+        right: 1.5rem !important;
+        font-size: 3.7rem !important;
+        margin-left: 0 !important;
+      }
+
+      .downloadImage {
+        left: 1.3rem !important;
+        position: absolute !important;
       }
 
       .modalPrev, .modalNext {
@@ -97,12 +113,6 @@ onUiLoaded(function () {
         text-shadow: 0px 0px 1rem black !important;
         transform: scale(1.3);
       }
-
-      .downloadImage {
-        font-size: 40px !important;
-        left: 30px !important;
-        position: absolute !important;
-      }
     `;
     document.head.appendChild(Controlsmodal);
   }
@@ -119,19 +129,11 @@ onUiLoaded(function () {
   let Groped = false;
   let GropinTime;
 
-  function imgEL(e) {
-    const imgRect = img.getBoundingClientRect();
-    if (e.clientX >= imgRect.left && e.clientX <= imgRect.right &&
-        e.clientY >= imgRect.top && e.clientY <= imgRect.bottom) { 
-      return true; 
-    }
-    return false;
-  }
-
   img.onload = (e) => {
     e.preventDefault();
     e.stopPropagation();
     imgReset();
+    img.style.opacity = '1';
     img.style.transform = 'translate(0px, 0px) scale(1)';
   };
 
@@ -209,6 +211,15 @@ onUiLoaded(function () {
     }
   });
 
+  const imgEL = (e) => {
+    const imgRect = img.getBoundingClientRect();
+    if (e.clientX >= imgRect.left && e.clientX <= imgRect.right &&
+        e.clientY >= imgRect.top && e.clientY <= imgRect.bottom) { 
+      return true; 
+    }
+    return false;
+  }
+
   imageContainer.onclick = modalClose.onclick = (e) => {
     e.stopPropagation();
     e.preventDefault();
@@ -216,17 +227,8 @@ onUiLoaded(function () {
   }
 
   function imgClose() {
-    document.body.style.overflow = '';
-    imageContainer.style.transition = 'opacity 0.5s ease';
-    img.style.transform = 'translate(0px, 0px) scale(0)';
-    imageContainer.style.opacity = '0';
-
-    setTimeout(() => {
-      imageContainer.style.display = 'none';
-      imgReset();
-      imageContainer.style.transition = '';
-      imageContainer.style.opacity = '1';
-    }, 200);
+    imageContainer.style.display = 'none';
+    imgReset();
   }
 
   function imgReset() {
@@ -236,13 +238,14 @@ onUiLoaded(function () {
     lastY = 0;
     offsetX = 0;
     offsetY = 0;
-    Groped = false;
     centerX = 0;
     centerY = 0;
     delta = 0;
+    Groped = false;
 
+    img.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
+    img.style.opacity = '0';
     img.style.transform = 'translate(0px, 0px) scale(0)';
-    img.style.transition = 'transform 0.5s ease';
   }
 
   function toggleNextPrev() {
@@ -270,7 +273,7 @@ onUiLoaded(function () {
         toggleNextPrev();
         document.body.style.overflow = 'hidden';
       } else if (DisplayNow === 'none') {
-        return;
+        document.body.style.overflow = '';
       }
     }
   });
