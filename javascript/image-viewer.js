@@ -1,37 +1,36 @@
 onUiLoaded(function () {
-  let imageContainer = document.getElementById('lightboxModal');
-  let modalControls = imageContainer.getElementsByClassName('modalControls')[0];
-  let modalClose = imageContainer.querySelector('.modalClose');
-  let DisplayBefore = window.getComputedStyle(imageContainer).display;
-  let img = imageContainer.querySelector('img');
+  let LightBox = document.getElementById('lightboxModal');
+  let BoxControls = LightBox.getElementsByClassName('modalControls')[0];
+  let BoxClose = LightBox.querySelector('.modalClose');
+  let imgPrev = LightBox.querySelector('.modalPrev');
+  let imgNext = LightBox.querySelector('.modalNext');
+  let imgEL = LightBox.querySelector('img');
 
-  const downloadSpan = document.createElement('span');
-  downloadSpan.className = 'downloadImage cursor';
-  downloadSpan.title = 'Download Image';
-  downloadSpan.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg"
-        width="30"
-        height="30"
-        viewBox="0 0 32 32">
-      <path
-        fill="currentColor"
-        stroke="currentColor"
-        stroke-width="1.8"
-        d="
-          M26 24v4H6v-4H4v4a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2v-4zm0-10
-          l-1.41-1.41L17 20.17V2h-2v18.17l-7.59-7.58L6 14l10 10l10-10z
-        ">
-      </path>
-    </svg>
-    `;
-  modalControls.appendChild(downloadSpan);
+  if (BoxControls) {
+    const downloadSpan = document.createElement('span');
+    downloadSpan.className = 'downloadImage cursor';
+    downloadSpan.title = 'Download Image';
+    downloadSpan.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg"
+          width="30"
+          height="30"
+          viewBox="0 0 32 32">
+        <path
+          fill="currentColor"
+          stroke="currentColor"
+          stroke-width="1.8"
+          d="
+            M26 24v4H6v-4H4v4a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2v-4zm0-10
+            l-1.41-1.41L17 20.17V2h-2v18.17l-7.59-7.58L6 14l10 10l10-10z
+          ">
+        </path>
+      </svg>
+      `;
+    BoxControls.appendChild(downloadSpan);
 
-  var SB = 'var(--primary-400)';
-
-  if (modalControls) {
     downloadSpan.addEventListener("click", function(event) {
-      if (img) {
-        const imgUrl = img.src;
+      if (imgEL) {
+        const imgUrl = imgEL.src;
         const filename = imgUrl.substring(imgUrl.lastIndexOf("/") + 1, imgUrl.lastIndexOf("?"));
         const downloadLink = document.createElement("a");
         downloadLink.href = imgUrl;
@@ -43,26 +42,8 @@ onUiLoaded(function () {
       event.stopPropagation();
     });
 
-    const Controlsmodal = document.createElement("style");
-    Controlsmodal.textContent = `
-      #lightboxModal {
-        width: 100% !important;
-        height: 100% !important;
-        overflow: hidden !important;
-        backdrop-filter: blur(10px);
-        background-color: rgba(0, 0, 0, 0.7) !important;
-      }
-
-      #lightboxModal > img {
-        width: auto !important;
-        height: auto !important;
-        max-width: 100%;
-        max-height: 100%;
-        opacity: 0;
-        transform: translate(0px, 0px) scale(0);
-        transition: transform 0.5s ease, opacity 0.5s ease;
-      }
-
+    const ControlStyle = document.createElement("style");
+    ControlStyle.textContent = `
       #lightboxModal > img:focus {
         outline: none;
       }
@@ -82,18 +63,17 @@ onUiLoaded(function () {
 
       .modalControls span {
         z-index: 9999;
-        color: ${SB} !important;
+        color: var(--primary-400) !important;
         pointer-events: auto;
         filter: brightness(1);
-        text-shadow: 0px 0px 0.5rem black !important;
+        text-shadow: 0 0 7px black !important;
         transition: 0.3s ease;
         position: absolute !important;
         width: auto !important;
       }
 
       .modalControls span:hover {
-        filter: brightness(0.7);
-        text-shadow: 0px 0px 1rem black !important;
+        filter: brightness(0.8);
         transform: scale(1.3);
       }
 
@@ -109,162 +89,162 @@ onUiLoaded(function () {
         position: absolute !important;
       }
 
+      .downloadImage svg {
+        filter: drop-shadow(0 0 3px black);
+      }
+
       .modalPrev, .modalNext {
         z-index: 9999;
-        color: ${SB} !important;
+        color: var(--primary-400) !important;
         font-size: 30px !important;
         filter: brightness(1);
-        text-shadow: 0px 0px 0.5rem black !important;
+        text-shadow: 0 0 7px black !important;
+        transition: 0.3s ease !important;
       }
 
       .modalPrev:hover, .modalNext:hover {
-        filter: brightness(0.7);
+        filter: brightness(0.8);
         background-color: transparent !important;
         background: transparent !important;
-        text-shadow: 0px 0px 1rem black !important;
-        transform: scale(1.3);
+        transform: scale(1.4);
       }
     `;
-    document.head.appendChild(Controlsmodal);
+
+    document.body.appendChild(ControlStyle);
   }
 
-  let scale = 1;
-  let lastScale = scale;
-  let lastX = 0;
-  let lastY = 0;
-  let offsetX = 0;
-  let offsetY = 0;
-  let centerX = 0;
-  let centerY = 0;
-  let delta = 0;
-  let Groped = false;
-  let GropinTime;
+  if (LightBox) {
+    Object.assign(LightBox.style, {
+      overflow: 'hidden',
+      backdropFilter: 'blur(10px)',
+      backgroundColor: 'rgba(0, 0, 0, 0.7)'
+    });
 
-  img.onload = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    imgReset();
-    img.style.opacity = '1';
-    img.style.transform = 'translate(0px, 0px) scale(1)';
-  };
+    Object.assign(imgEL.style, {
+      maxWidth: '100%',
+      maxHeight: '100%',
+      cursor: 'auto',
+      opacity: '0',
+      transform: 'translate(0px, 0px) scale(0)',
+      transition: 'transform 0.3s ease, opacity 0.3s ease'
+    });
 
-  img.ondrag = img.ondragend = img.ondragstart = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  };
+    LightBox.appendChild(imgEL);
+    document.body.appendChild(LightBox);
 
-  img.addEventListener('wheel', (e) => {
-    if (!imgEL(e)) return;
-    e.preventDefault();
-    e.stopPropagation();
-    img.style.transition = 'transform 0.3s ease';
-    centerX = imageContainer.offsetWidth / 2;
-    centerY = imageContainer.offsetHeight / 2;
-    delta = Math.max(-1, Math.min(1, e.wheelDelta || -e.detail));
-    const zoomStep = 0.1;
-    const zoom = 1 + delta * zoomStep;
-    lastScale = scale;
-    scale *= zoom;
-    scale = Math.max(0.1, scale);
-    const imgCenterX = offsetX + centerX;
-    const imgCenterY = offsetY + centerY;
-    offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * scale - centerX;
-    offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * scale - centerY;
-    img.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-  });
+    let scale = 1;
+    let offsetX = 0;
+    let offsetY = 0;
+    let lastX = 0;
+    let lastY = 0;
+    let GropinTime = null;
+    let Groped = false;
 
-  img.addEventListener('mousedown', (e) => {
-    e.preventDefault();
+    imgEL.onload = () => {
+      imgReset();
+      imgEL.style.opacity = '1';
+      imgEL.style.transform = 'translate(0px, 0px) scale(1)';
+    };
 
-    GropinTime = setTimeout(() => {
-      Groped = true;
-      img.style.transition = 'transform 60ms ease';
-      img.style.cursor = 'grab';
-      lastX = e.clientX - offsetX;
-      lastY = e.clientY - offsetY;
-    }, 100);
-  });
-
-  img.addEventListener('mousemove', (e) => {
-    if (!Groped) return;
-    e.preventDefault();
-    img.onclick = (e) => {
+    imgEL.ondrag = imgEL.ondragend = imgEL.ondragstart = (e) => {
       e.stopPropagation();
-    }
+      e.preventDefault();
+    };
 
-    const deltaX = e.clientX - lastX;
-    const deltaY = e.clientY - lastY;
-    offsetX = deltaX;
-    offsetY = deltaY;
-    img.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
-  });
+    imgEL.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const centerX = LightBox.offsetWidth / 2;
+      const centerY = LightBox.offsetHeight / 2;
+      const delta = Math.max(-1, Math.min(1, e.wheelDelta || -e.detail));
+      const zoomStep = 0.1;
+      const zoom = 1 + delta * zoomStep;
+      const lastScale = scale;
+      scale *= zoom;
+      scale = Math.max(0.1, scale);
+      const imgCenterX = offsetX + centerX;
+      const imgCenterY = offsetY + centerY;
+      offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * scale - centerX;
+      offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * scale - centerY;
+      imgEL.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    });
 
-  img.addEventListener('mouseup', (e) => {
-    clearTimeout(GropinTime);
+    imgEL.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      GropinTime = setTimeout(() => {
+        Groped = true;
+        imgEL.style.transition = 'transform 60ms ease, opacity 0.3s ease';
+        imgEL.style.cursor = 'grab';
+        lastX = e.clientX - offsetX;
+        lastY = e.clientY - offsetY;
+      }, 100);
+    });
 
-    if (!Groped) {
-      img.onclick = (e) => {
+    imgEL.addEventListener('mousemove', (e) => {
+      if (!Groped) return;
+      e.preventDefault();
+      imgEL.onclick = (e) => {
         e.stopPropagation();
-        imgClose();
       }
-      return;
+      const deltaX = e.clientX - lastX;
+      const deltaY = e.clientY - lastY;
+      offsetX = deltaX;
+      offsetY = deltaY;
+      imgEL.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(${scale})`;
+    });
+
+    imgEL.addEventListener('mouseup', (e) => {
+      clearTimeout(GropinTime);
+      if (!Groped) {
+        imgEL.onclick = (e) => {
+          e.stopPropagation();
+          imgClose();
+        }
+        return;
+      }
+      Groped = false;
+      imgEL.style.cursor = 'auto';
+      imgEL.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    });
+
+    imgEL.addEventListener('mouseleave', (e) => {
+      if (Groped) {
+        lastX = e.clientX - offsetX;
+        lastY = e.clientY - offsetY;
+      }
+    });
+
+    LightBox.onclick = BoxClose.onclick = (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      imgClose();
     }
 
-    Groped = false;
-    img.style.cursor = 'auto';
-    img.style.transition = 'transform 0.3s ease';
-  });
-
-  img.addEventListener('mouseleave', (e) => {
-    if (Groped) {
-      lastX = e.clientX - offsetX;
-      lastY = e.clientY - offsetY;
+    function imgClose() {
+      imgEL.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      imgEL.style.opacity = '0';
+      imgEL.style.transform = 'translate(0px, 0px) scale(0)';
+      setTimeout(() => {
+        LightBox.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        imgReset();
+      }, 100);
     }
-  });
 
-  const imgEL = (e) => {
-    const imgRect = img.getBoundingClientRect();
-    if (e.clientX >= imgRect.left && e.clientX <= imgRect.right &&
-        e.clientY >= imgRect.top && e.clientY <= imgRect.bottom) { 
-      return true; 
+    function imgReset() {
+      scale = 1;
+      offsetX = 0;
+      offsetY = 0;
+      lastX = 0;
+      lastY = 0;
+      Groped = false;
     }
-    return false;
-  }
-
-  imageContainer.onclick = modalClose.onclick = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    imgClose();
-  }
-
-  function imgClose() {
-    imageContainer.style.display = 'none';
-    imgReset();
-  }
-
-  function imgReset() {
-    scale = 1;
-    lastScale = scale;
-    lastX = 0;
-    lastY = 0;
-    offsetX = 0;
-    offsetY = 0;
-    centerX = 0;
-    centerY = 0;
-    delta = 0;
-    Groped = false;
-
-    img.style.transition = 'transform 0.5s ease, opacity 0.5s ease';
-    img.style.opacity = '0';
-    img.style.transform = 'translate(0px, 0px) scale(0)';
   }
 
   function toggleNextPrev() {
     const imgGallery = gradioApp().querySelectorAll('div[id^="tab_"] div[id$="_results"] .thumbnail-item > img');
-    const imgSrc = new Set(Array.from(imgGallery).map(img => img.src));
-    const imgPrev = imageContainer.querySelector('.modalPrev');
-    const imgNext = imageContainer.querySelector('.modalNext');
-
+    const imgSrc = new Set(Array.from(imgGallery).map(imgEL => imgEL.src));
     if (imgPrev && imgNext) {
       if (imgSrc.size > 1) {
         imgPrev.style.display = 'block';
@@ -277,17 +257,11 @@ onUiLoaded(function () {
   }
 
   const Watcher = new MutationObserver(() => {
-    const DisplayNow = window.getComputedStyle(imageContainer).display;
-    if (DisplayNow !== DisplayBefore) {
-      DisplayBefore = DisplayNow;
-      if (DisplayNow === 'flex') {
-        toggleNextPrev();
-        document.body.style.overflow = 'hidden';
-      } else if (DisplayNow === 'none') {
-        document.body.style.overflow = '';
-      }
+    if (window.getComputedStyle(LightBox).display === 'flex') {
+      toggleNextPrev();
+      document.body.style.overflow = 'hidden';
     }
   });
 
-  Watcher.observe(imageContainer, { attributes: true, attributeFilter: ['style'] });
+  Watcher.observe(LightBox, { attributes: true, attributeFilter: ['style'] });
 });
