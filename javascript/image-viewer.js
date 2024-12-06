@@ -152,6 +152,7 @@ onUiLoaded(function () {
     };
 
     imgEL.addEventListener('wheel', (e) => {
+      if (!imgEL) return;
       e.preventDefault();
       e.stopPropagation();
       const centerX = LightBox.offsetWidth / 2;
