@@ -121,8 +121,8 @@ onUiLoaded(function () {
     });
 
     Object.assign(imgEL.style, {
-      maxWidth: '100%',
-      maxHeight: '100%',
+      width: 'auto',
+      height: 'auto',
       cursor: 'auto',
       opacity: '0',
       transform: 'translate(0px, 0px) scale(0)',
@@ -163,6 +163,7 @@ onUiLoaded(function () {
       const lastScale = scale;
       scale *= zoom;
       scale = Math.max(0.1, scale);
+      scale = Math.min(scale, 10);
       const imgCenterX = offsetX + centerX;
       const imgCenterY = offsetY + centerY;
       offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * scale - centerX;
@@ -240,6 +241,7 @@ onUiLoaded(function () {
       lastX = 0;
       lastY = 0;
       Groped = false;
+      void imgEL.offsetWidth;
     }
   }
 
