@@ -125,8 +125,8 @@ onUiLoaded(function () {
       height: 'auto',
       cursor: 'auto',
       opacity: '0',
-      transform: 'translate(0px, 0px) scale(0)',
-      transition: 'transform 0.3s ease, opacity 0.3s ease'
+      transition: 'transform 0.3s ease, opacity 0.6s ease',
+      transform: 'translate(0px, 0px) scale(0)'
     });
 
     LightBox.appendChild(imgEL);
@@ -168,7 +168,7 @@ onUiLoaded(function () {
       const imgCenterY = offsetY + centerY;
       offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * scale - centerX;
       offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * scale - centerY;
-      imgEL.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      imgEL.style.transition = 'transform 0.3s ease';
       imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
     });
 
@@ -176,7 +176,7 @@ onUiLoaded(function () {
       e.preventDefault();
       GropinTime = setTimeout(() => {
         Groped = true;
-        imgEL.style.transition = 'transform 60ms ease, opacity 0.3s ease';
+        imgEL.style.transition = 'transform 0s ease';
         imgEL.style.cursor = 'grab';
         lastX = e.clientX - offsetX;
         lastY = e.clientY - offsetY;
@@ -207,7 +207,7 @@ onUiLoaded(function () {
       }
       Groped = false;
       imgEL.style.cursor = 'auto';
-      imgEL.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+      imgEL.style.transition = 'transform 0.3s ease';
     });
 
     imgEL.addEventListener('mouseleave', (e) => {
@@ -221,17 +221,20 @@ onUiLoaded(function () {
       e.stopPropagation();
       e.preventDefault();
       imgClose();
-    }
+    };
+
+    LightBox.onkeydown = (e) => {
+      if (e.key === 'Escape') { 
+        e.stopPropagation();
+        e.preventDefault();
+        imgClose(); 
+      }
+    };
 
     function imgClose() {
-      imgEL.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
-      imgEL.style.opacity = '0';
-      imgEL.style.transform = 'translate(0px, 0px) scale(0)';
-      setTimeout(() => {
-        LightBox.style.display = 'none';
-        document.body.style.overflow = 'auto';
-        imgReset();
-      }, 100);
+      LightBox.style.display = 'none';
+      document.body.style.overflow = 'auto';
+      imgReset();
     }
 
     function imgReset() {
@@ -241,7 +244,10 @@ onUiLoaded(function () {
       lastX = 0;
       lastY = 0;
       Groped = false;
-      void imgEL.offsetWidth;
+
+      imgEL.style.transition = 'transform 0.3s ease, opacity 0.6s ease';
+      imgEL.style.opacity = '0';
+      imgEL.style.transform = 'translate(0px, 0px) scale(0)';
     }
   }
 
