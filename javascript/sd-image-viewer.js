@@ -444,7 +444,9 @@ function ifBoxControls(BoxControls, imgEL) {
   downloadSpan.addEventListener("click", function(e) {
     if (imgEL) {
       const imgUrl = imgEL.src;
-      const filename = imgUrl.substring(imgUrl.lastIndexOf("/") + 1, imgUrl.lastIndexOf("?"));
+      const start = imgUrl.lastIndexOf("/") + 1;
+      const end = imgUrl.indexOf("?") !== -1 ? imgUrl.indexOf("?") : undefined;
+      const filename = imgUrl.substring(start, end);
       const downloadLink = document.createElement("a");
       downloadLink.href = imgUrl;
       downloadLink.download = filename;
