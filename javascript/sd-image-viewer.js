@@ -17,9 +17,6 @@ function ifimgEL(imgEL, LightBox, BoxClose) {
 
   imgEL.onload = () => {
     imgReset();
-    imgEL.offsetHeight;
-    imgEL.style.opacity = '1';
-    imgEL.style.transform = 'translate(0px, 0px) scale(1)';
   };
 
   imgEL.ondrag = imgEL.ondragend = imgEL.ondragstart = (e) => {
@@ -245,7 +242,6 @@ function ifimgEL(imgEL, LightBox, BoxClose) {
     });
 
     imgEL.style.transition = '';
-    imgEL.style.opacity = '';
     imgEL.style.transform = '';
   }
 
@@ -399,6 +395,7 @@ function ifimgEL(imgEL, LightBox, BoxClose) {
     LightBox.style.display = 'none';
     document.body.style.overflow = 'auto';
     imgReset();
+    imgEL.style.opacity = '0';
   }
 }
 
@@ -425,17 +422,10 @@ function ifBoxControls(BoxControls, imgEL) {
   downloadSpan.title = 'Download Image';
   downloadSpan.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg"
-        width="30"
-        height="30"
-        viewBox="0 0 32 32">
-      <path
-        fill="currentColor"
-        stroke="currentColor"
-        stroke-width="1.8"
-        d="
-          M26 24v4H6v-4H4v4a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2v-4zm0-10
-          l-1.41-1.41L17 20.17V2h-2v18.17l-7.59-7.58L6 14l10 10l10-10z
-        ">
+        width="32" height="32" viewBox="0 0 32 32">
+      <path fill="currentColor" stroke="currentColor" stroke-width="1.8"
+        d="M26 24v4H6v-4H4v4a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2v-4zm0-10
+        l-1.41-1.41L17 20.17V2h-2v18.17l-7.59-7.58L6 14l10 10l10-10z">
       </path>
     </svg>
     `;
@@ -443,7 +433,7 @@ function ifBoxControls(BoxControls, imgEL) {
 
   downloadSpan.addEventListener("click", function(e) {
     if (imgEL) {
-      const imgUrl = imgEL.src;
+      let imgUrl = encodeURI(imgEL.src);
       const start = imgUrl.lastIndexOf("/") + 1;
       const end = imgUrl.indexOf("?") !== -1 ? imgUrl.indexOf("?") : undefined;
       const filename = imgUrl.substring(start, end);
@@ -473,6 +463,9 @@ onUiLoaded(function () {
     if (window.getComputedStyle(LightBox).display === 'flex') {
       toggleNextPrev();
       document.body.style.overflow = 'hidden';
+      setTimeout(() => {
+        imgEL.style.opacity = '1';
+      }, 10);
     }
   });
 
