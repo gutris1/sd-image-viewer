@@ -3,7 +3,8 @@
 Based on [viyiviyi](https://github.com/viyiviyi/stable-diffusion-webui-zoomimage) zoom image extension.<br>
 a pure DOM manipulation for image zooming, dragging, and touch gestures for touchscreen devices.<br>
 <br>
-whats different, the image will now always stay centered, except when its width exceeds the screen's width, in which case its edges will always snap to the screen's edges during dragging.<br>
+what's different, the image will now always centered, except when its width exceeds the screen's width<br>
+in that case the image edges will always snap to the screen's edges during dragging.<br>
 <br>
 Usage:<br>
 Use the mouse wheel to zoom in and out, hold left-click to drag the image, or pinch to zoom on touchscreen devices.<br>
