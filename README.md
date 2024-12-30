@@ -1,7 +1,8 @@
 # SD Image Viewer
 
 Based on [viyiviyi](https://github.com/viyiviyi/stable-diffusion-webui-zoomimage) zoom image extension.<br>
-a pure DOM manipulation for image zooming, dragging, and touch gestures for touchscreen devices.<br>
+a pure DOM manipulation for image zooming, dragging, and touch gestures on touchscreen devices<br>
+for txt2img and img2img image viewer.<br>
 <br>
 what's different, the image will now always centered, except when its width exceeds the screen's width<br>
 in that case the image edges will always snap to the screen's edges during dragging.<br>
