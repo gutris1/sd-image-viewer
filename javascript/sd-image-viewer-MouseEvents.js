@@ -117,24 +117,24 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
       imgEL.style.transform = `translate(0px, 0px) scale(${imgState.scale})`;
 
     } else if (imgELW <= imgBoxW && imgELH >= imgBoxH) {
-			const imgCenterY = imgState.offsetY + centerY;
-			imgState.offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * imgState.scale - centerY;
-			
-			const EdgeY = (imgELH - imgBoxH) / 2;
-			if (imgState.offsetY > EdgeY) imgState.offsetY = EdgeY;
-			else if (imgState.offsetY < -EdgeY) imgState.offsetY = -EdgeY;
-			
-			imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
+      const imgCenterY = imgState.offsetY + centerY;
+      imgState.offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * imgState.scale - centerY;
 
-		} else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
-			const imgCenterX = imgState.offsetX + centerX;
-			imgState.offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * imgState.scale - centerX;
-		
-			const EdgeX = (imgELW - imgBoxW) / 2;
-			if (imgState.offsetX > EdgeX) imgState.offsetX = EdgeX;
-			else if (imgState.offsetX < -EdgeX) imgState.offsetX = -EdgeX;
-		
-			imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
+      const EdgeY = (imgELH - imgBoxH) / 2;
+      if (imgState.offsetY > EdgeY) imgState.offsetY = EdgeY;
+      else if (imgState.offsetY < -EdgeY) imgState.offsetY = -EdgeY;
+
+      imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
+
+    } else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
+      const imgCenterX = imgState.offsetX + centerX;
+      imgState.offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * imgState.scale - centerX;
+
+      const EdgeX = (imgELW - imgBoxW) / 2;
+      if (imgState.offsetX > EdgeX) imgState.offsetX = EdgeX;
+      else if (imgState.offsetX < -EdgeX) imgState.offsetX = -EdgeX;
+
+      imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
 
     } else if (imgELW >= imgBoxW && imgELH >= imgBoxH) {
       const imgCenterX = imgState.offsetX + centerX;
