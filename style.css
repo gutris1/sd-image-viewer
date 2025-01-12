@@ -2,6 +2,9 @@
   overflow: hidden;
   backdrop-filter: blur(10px);
   background-color: rgba(0, 0, 0, 0.8);
+  transition: transform 0.3s ease, opacity 0.4s ease;
+  opacity: 0;
+  transform: translate(0px, 0px) scale(1);
 }
 
 #lightboxModal > img.modalImageFullscreen {
@@ -11,9 +14,8 @@
   max-height: 100%;
   cursor: auto;
   background-color: var(--input-background-fill);
-  opacity: 0;
-  transition: transform 0.4s ease, opacity 0.6s ease;
-  transform: translate(0, 0) scale(1);
+  transition: transform 0.3s ease;
+  transform: translate(0px, 0px) scale(0);
 }
 
 #lightboxModal > img:focus {
@@ -30,6 +32,7 @@
 }
 
 .modalControls span {
+  display: flex;
   z-index: 9999;
   color: var(--button-secondary-text-color) !important;
   pointer-events: auto;
@@ -51,32 +54,38 @@
 }
 
 .modalClose {
-  top: 0 !important;
-  right: 1.5rem !important;
-  font-size: 3.7rem !important;
-  margin-left: 0 !important;
+  top: 15px;
+  right: 15px;
 }
 
 .modalToggleLivePreview {
   top: 0;
-  left: 80px;
+  left: 70px;
 }
 
 .downloadImage {
-  left: 20px;
   top: 15px;
+  left: 15px;
 }
 
-.downloadImage svg {
-  filter: drop-shadow(0 0 3px black);
+.modalPrev {
+  padding-left: 5px;
+  padding-right: 0;
+}
+
+.modalNext {
+  padding-left: 0;
+  padding-right: 5px;
 }
 
 .modalPrev, .modalNext {
   z-index: 9999;
+  margin-top: -20px;
   color: var(--button-secondary-text-color) !important;
   font-size: 30px !important;
-  text-shadow: 0 0 7px black !important;
   transition: 0.3s ease !important;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .modalPrev:hover, .modalNext:hover {
@@ -85,4 +94,9 @@
   background: transparent !important;
   transform: scale(1.4);
   color: var(--button-secondary-text-color-hover) !important;
+}
+
+.downloadImage svg, .modalClose svg,
+.modalPrev svg, .modalNext svg {
+  filter: drop-shadow(0 0 3px #000);
 }
