@@ -1,234 +1,29 @@
-function ifimgEL(imgEL, LightBox, BoxClose) {
-  let scale = 1;
-  let offsetX = 0;
-  let offsetY = 0;
-  let lastX = 0;
-  let lastY = 0;
-  let lastLen = 1;
-  let GropinTime = null;
-  let Groped = false;
-  let velocityX = 0;
-  let velocityY = 0;
-  let LastTouch = 0;
-  let ZoomMomentum = 0;
-  let LastZoom = 0;
-  let MultiGrope = false;
-  let SnapMeter = 20;
+onUiLoaded(function () {
+  let LightBox = document.querySelector('#lightboxModal');
+  let ModalControls = LightBox.querySelector('.modalControls');
 
-  imgEL.onload = () => {
-    imgReset();
-  };
+  if (ModalControls) SDImageViewerModalControls(); SDImageViewerimgEL();
+});
 
-  imgEL.ondrag = imgEL.ondragend = imgEL.ondragstart = (e) => {
-    e.stopPropagation(); e.preventDefault();
-  };
+function SDImageViewerimgEL() {
+  const LightBox = document.querySelector('#lightboxModal');
+  const ModalClose = LightBox.querySelector('.modalClose');
+  const imgEL = LightBox.querySelector('img');
 
-  imgEL.addEventListener('wheel', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
+  const imgState = {
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0,
+    lastX: 0,
+    lastY: 0,
+    lastLen: 1,
+    LastTouch: 0,
+    ZoomMomentum: 0,
+    LastZoom: 0,
+    SnapMouse: 20,
+    SnapTouch: 10,
 
-    const currentTime = Date.now();
-    const timeDelta = currentTime - LastZoom;
-    LastZoom = currentTime;
-    const centerX = LightBox.offsetWidth / 2;
-    const centerY = LightBox.offsetHeight / 2;
-    const delta = Math.max(-1, Math.min(1, e.wheelDelta || -e.detail));
-    const zoomStep = 0.15;
-    const zoom = 1 + delta * zoomStep;
-    const lastScale = scale;
-    scale *= zoom;
-    scale = Math.max(1, Math.min(scale, 10));
-    ZoomMomentum = delta / (timeDelta * 0.5 || 1);
-    ZoomMomentum = Math.min(Math.max(ZoomMomentum, -1.5), 1.5);
-
-    const imgELW = imgEL.offsetWidth * scale;
-    const imgELH = imgEL.offsetHeight * scale;
-    const imgBoxW = LightBox.offsetWidth;
-    const imgBoxH = LightBox.offsetHeight;
-
-    if (scale <= 1) {
-      offsetX = 0;
-      offsetY = 0;
-    } else if (imgELW <= imgBoxW) {
-      const imgCenterY = offsetY + centerY;
-      offsetX = 0;
-      offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * scale - centerY;
-
-      const EdgeY = (imgELH - imgBoxH) / 2;
-      if (offsetY > EdgeY) {
-        offsetY = EdgeY;
-      } else if (offsetY < -EdgeY) {
-        offsetY = -EdgeY;
-      }
-    } else {
-      const imgCenterX = offsetX + centerX;
-      const imgCenterY = offsetY + centerY;
-      offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * scale - centerX;
-      offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * scale - centerY;
-
-      const EdgeX = (imgELW - imgBoxW) / 2;
-      if (offsetX > EdgeX) {
-        offsetX = EdgeX;
-      } else if (offsetX < -EdgeX) {
-        offsetX = -EdgeX;
-      }
-
-      const EdgeY = (imgELH - imgBoxH) / 2;
-      if (offsetY > EdgeY) {
-        offsetY = EdgeY;
-      } else if (offsetY < -EdgeY) {
-        offsetY = -EdgeY;
-      }
-    }
-
-    const momentumFactor = Math.abs(ZoomMomentum);
-    const ZoomTransition = `transform ${0.4 * (1 + momentumFactor)}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
-    imgEL.style.transition = ZoomTransition;
-    imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    ZoomMomentum *= 0.5;
-  }, { passive: false });
-
-  imgEL.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    GropinTime = setTimeout(() => {
-      Groped = true;
-      imgEL.style.transition = 'transform 0s ease';
-      imgEL.style.cursor = 'grab';
-      lastX = e.clientX - offsetX;
-      lastY = e.clientY - offsetY;
-    }, 100);
-  });
-
-  imgEL.addEventListener('mousemove', (e) => {
-    if (!Groped) return;
-    e.preventDefault();
-    imgEL.onclick = (e) => e.stopPropagation();
-    LightBox.onclick = (e) => e.stopPropagation();
-
-    const imgELW = imgEL.offsetWidth * scale;
-    const imgELH = imgEL.offsetHeight * scale;
-    const imgBoxW = LightBox.offsetWidth;
-    const imgBoxH = LightBox.offsetHeight;
-    const deltaX = e.clientX - lastX;
-    const deltaY = e.clientY - lastY;
-
-    imgEL.style.transition = 'transform 60ms ease';
-
-    if (scale <= 1) {
-      offsetX = 0;
-      offsetY = 0;
-      imgEL.style.transform = `translateX(0px) scale(${scale})`;
-    } else if (imgELW <= imgBoxW) { 
-      offsetY = deltaY;
-      const EdgeY = (imgELH - imgBoxH) / 2;
-      if (deltaY > EdgeY + SnapMeter) {
-        offsetY = EdgeY + SnapMeter;
-      } else if (deltaY < -EdgeY - SnapMeter) {
-        offsetY = -EdgeY - SnapMeter;
-      }
-
-      imgEL.style.transform = `translateY(${offsetY}px) scale(${scale})`;
-    } else { 
-      offsetX = deltaX;
-      offsetY = deltaY;
-
-      const EdgeX = (imgELW - imgBoxW) / 2;
-      if (deltaX > EdgeX + SnapMeter) {
-        offsetX = EdgeX + SnapMeter;
-      } else if (deltaX < -EdgeX - SnapMeter) {
-        offsetX = -EdgeX - SnapMeter;
-      }
-
-      const EdgeY = (imgELH - imgBoxH) / 2;
-      if (deltaY > EdgeY + SnapMeter) {
-        offsetY = EdgeY + SnapMeter;
-      } else if (deltaY < -EdgeY - SnapMeter) {
-        offsetY = -EdgeY - SnapMeter;
-      }
-
-      imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    }
-  });
-
-  document.addEventListener('mouseup', (e) => {
-    clearTimeout(GropinTime);
-    if (!Groped && e.button === 0) {
-      imgEL.onclick = closeZoom;
-      LightBox.onclick = closeZoom;
-      BoxClose.onclick = closeZoom;
-      return;
-    }
-    SnapBack(imgEL, LightBox);
-    Groped = false;
-    imgEL.style.cursor = 'auto';
-    setTimeout(() => {
-      imgEL.style.transition = 'transform 0s ease';
-    }, 100);
-  });
-
-  document.addEventListener('mouseleave', (e) => {
-    if (e.target !== LightBox && Groped) {
-      SnapBack(imgEL, LightBox);
-      Groped = false;
-      imgEL.style.cursor = 'auto';
-    }
-  });
-
-  LightBox.onkeydown = (e) => {
-    if (!Groped && e.target === LightBox && e.key === 'Escape') {
-      closeZoom();
-    }
-  };
-
-  function SnapBack(imgEL, LightBox) {
-    if (scale <= 1) return;
-
-    const imgELW = imgEL.offsetWidth * scale;
-    const imgELH = imgEL.offsetHeight * scale;
-    const imgBoxW = LightBox.offsetWidth;
-    const imgBoxH = LightBox.offsetHeight;
-
-    if (imgELW <= imgBoxW) {
-      const EdgeY = (imgELH - imgBoxH) / 2;
-      if (offsetY > EdgeY) {
-        offsetY = EdgeY;
-      } else if (offsetY < -EdgeY) {
-        offsetY = -EdgeY;
-      }
-
-      imgEL.style.transition = 'transform 0.3s ease';
-      imgEL.style.transform = `translateY(${offsetY}px) scale(${scale})`;
-
-    } else {
-      const EdgeX = (imgELW - imgBoxW) / 2;
-      if (offsetX > EdgeX) {
-        offsetX = EdgeX;
-      } else if (offsetX < -EdgeX) {
-        offsetX = -EdgeX;
-      }
-
-      const EdgeY = (imgELH - imgBoxH) / 2;
-      if (offsetY > EdgeY) {
-        offsetY = EdgeY;
-      } else if (offsetY < -EdgeY) {
-        offsetY = -EdgeY;
-      }
-
-      imgEL.style.transition = 'transform 0.3s ease';
-      imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    }
-  }
-
-  function imgReset() {
-    scale = 1;
-    offsetX = 0;
-    offsetY = 0;
-    lastX = 0;
-    lastY = 0;
-    Groped = false;
-
-    Object.assign(TouchGrass, {
+    TouchGrass: {
       touchScale: false,
       last1X: 0,
       last1Y: 0,
@@ -239,197 +34,145 @@ function ifimgEL(imgEL, LightBox, BoxClose) {
       delta2X: 0,
       delta2Y: 0,
       scale: 1
-    });
+    },
 
-    imgEL.style.transition = '';
-    imgEL.style.transform = '';
-  }
+    SDImageViewerSnapBack: function(imgEL, LightBox) {
+      if (this.scale <= 1) return;
 
-  const TouchGrass = {
-    touchScale: false,
-    last1X: 0,
-    last1Y: 0,
-    last2X: 0,
-    last2Y: 0,
-    delta1X: 0,
-    delta1Y: 0,
-    delta2X: 0,
-    delta2Y: 0,
-    scale: 1
-  };
+      const imgELW = imgEL.offsetWidth * this.scale;
+      const imgELH = imgEL.offsetHeight * this.scale;
+      const imgBoxW = LightBox.offsetWidth;
+      const imgBoxH = LightBox.offsetHeight;
 
-  imgEL.addEventListener('touchstart', (e) => {
-    e.stopPropagation();
-    imgEL.style.transition = 'none';
-    velocityX = 0; 
-    velocityY = 0;
+      if (imgELW <= imgBoxW) {
+        const EdgeY = (imgELH - imgBoxH) / 2;
+        if (this.offsetY > EdgeY) this.offsetY = EdgeY;
+        else if (this.offsetY < -EdgeY) this.offsetY = -EdgeY;
 
-    if (e.targetTouches[1]) {
-      MultiGrope = true;
-      TouchGrass.touchScale = true;
-      TouchGrass.last1X = e.targetTouches[0].clientX;
-      TouchGrass.last1Y = e.targetTouches[0].clientY;
-      TouchGrass.last2X = e.targetTouches[1].clientX;
-      TouchGrass.last2Y = e.targetTouches[1].clientY;
-      TouchGrass.scale = scale;
-      lastLen = Math.sqrt(
-        Math.pow(TouchGrass.last2X - TouchGrass.last1X, 2) +
-        Math.pow(TouchGrass.last2Y - TouchGrass.last1Y, 2)
-      );
-    } else {
-      MultiGrope = false;
-      
-      if (!TouchGrass.touchScale) {
-        lastX = e.targetTouches[0].clientX;
-        lastY = e.targetTouches[0].clientY;
-        LastTouch = Date.now();
-      }
-    }
-  });
+        imgEL.style.transition = 'transform 0.3s ease';
+        imgEL.style.transform = `translateY(${this.offsetY}px) scale(${this.scale})`;
 
-  LightBox.addEventListener('touchmove', (e) => {
-    if (e.target !== imgEL) e.stopPropagation(), e.preventDefault();
-  });
+      } else if (imgELH <= imgBoxH) {
+        const EdgeX = (imgELW - imgBoxW) / 2;
+        if (this.offsetX > EdgeX) this.offsetX = EdgeX;
+        else if (this.offsetX < -EdgeX) this.offsetX = -EdgeX;
 
-  imgEL.addEventListener('touchmove', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    imgEL.onclick = (e) => e.stopPropagation();
-    imgEL.style.transition = 'none';
+        imgEL.style.transition = 'transform 0.3s ease';
+        imgEL.style.transform = `translateX(${this.offsetX}px) scale(${this.scale})`;
 
-    if (e.targetTouches[1]) {
-      TouchGrass.delta1X = e.targetTouches[0].clientX;
-      TouchGrass.delta1Y = e.targetTouches[0].clientY;
-      TouchGrass.delta2X = e.targetTouches[1].clientX;
-      TouchGrass.delta2Y = e.targetTouches[1].clientY;
-      let centerX = LightBox.offsetWidth / 2;
-      let centerY = LightBox.offsetHeight / 2;
-      let deltaLen = Math.sqrt(
-        Math.pow(TouchGrass.delta2X - TouchGrass.delta1X, 2) +
-        Math.pow(TouchGrass.delta2Y - TouchGrass.delta1Y, 2)
-      );
-
-      let zoom = deltaLen / lastLen;
-      let lastScale = scale;
-      scale = TouchGrass.scale * zoom;
-      scale = Math.max(0.1, scale);
-      scale = Math.min(scale, 10);
-      let deltaCenterX = TouchGrass.delta1X + (TouchGrass.delta2X - TouchGrass.delta1X) / 2;
-      let deltaCenterY = TouchGrass.delta1Y + (TouchGrass.delta2Y - TouchGrass.delta1Y) / 2;
-      let imgCenterX = offsetX + centerX;
-      let imgCenterY = offsetY + centerY;
-      offsetX = deltaCenterX - ((deltaCenterX - imgCenterX) / lastScale) * scale - centerX;
-      offsetY = deltaCenterY - ((deltaCenterY - imgCenterY) / lastScale) * scale - centerY;
-      imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-
-    } else if (!TouchGrass.touchScale) {
-      let now = Date.now();
-      let currentX = e.targetTouches[0].clientX;
-      let currentY = e.targetTouches[0].clientY;
-      let deltaX = currentX - lastX;
-      let deltaY = currentY - lastY;
-      let timeDelta = now - LastTouch;
-
-      velocityX = deltaX / timeDelta;
-      velocityY = deltaY / timeDelta;
-      offsetX += deltaX;
-      offsetY += deltaY;
-      lastX = currentX;
-      lastY = currentY;
-      LastTouch = now;
-
-      imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    }
-  });
-
-  imgEL.addEventListener('touchcancel', (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-    imgEL.onclick = undefined;
-    imgEL.style.transition = 'none';
-    imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-    MultiGrope = false;
-    TouchGrass.touchScale = false;
-  });
-
-  imgEL.addEventListener('touchend', (e) => {
-    e.stopPropagation();
-    imgEL.onclick = undefined;
-    imgEL.style.transition = 'none';
-
-    if (e.targetTouches.length === 0) {
-      if (MultiGrope) {
-        MultiGrope = false;
-        TouchGrass.touchScale = false;
       } else {
-        if (!TouchGrass.touchScale && (Math.abs(velocityX) > 0.05 || Math.abs(velocityY) > 0.05)) {
-          function TouchMomentum() {
-            let momentumDecay = 0.95;
-            let momentumMultiplier = 15;
-            let momentumThreshold = 0.05;
-            
-            if (Math.abs(velocityX) > momentumThreshold || Math.abs(velocityY) > momentumThreshold) {
-              offsetX += velocityX * momentumMultiplier;
-              offsetY += velocityY * momentumMultiplier;
-              velocityX *= momentumDecay;
-              velocityY *= momentumDecay;
-              imgEL.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
-              requestAnimationFrame(TouchMomentum);
-            } else {
-              velocityX = 0; 
-              velocityY = 0; 
-            }
-          }
+        const EdgeX = (imgELW - imgBoxW) / 2;
+        if (this.offsetX > EdgeX) this.offsetX = EdgeX;
+        else if (this.offsetX < -EdgeX) this.offsetX = -EdgeX;
 
-          TouchMomentum();
-        }
+        const EdgeY = (imgELH - imgBoxH) / 2;
+        if (this.offsetY > EdgeY) this.offsetY = EdgeY;
+        else if (this.offsetY < -EdgeY) this.offsetY = -EdgeY;
+
+        imgEL.style.transition = 'transform 0.3s ease';
+        imgEL.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
       }
+    },
+
+    SDImageViewerimgReset: function() {
+      this.scale = 1;
+      this.offsetX = 0;
+      this.offsetY = 0;
+      this.lastX = 0;
+      this.lastY = 0;
+
+      Object.assign(this.TouchGrass, {
+        touchScale: false,
+        last1X: 0,
+        last1Y: 0,
+        last2X: 0,
+        last2Y: 0,
+        delta1X: 0,
+        delta1Y: 0,
+        delta2X: 0,
+        delta2Y: 0,
+        scale: 1
+      });
+
+      imgEL.style.transition = 'transform 0.3s ease';
+    },
+
+    SDImageViewerCloseZoom: function() {
+      setTimeout(() => {
+        LightBox.style.opacity = '0';
+      }, 50);
 
       setTimeout(() => {
-        TouchGrass.touchScale = false;
-      }, 10);
+        document.querySelector('body > gradio-app').style.paddingRight = '0';
+        document.body.style.overflow = '';
+        LightBox.style.display = "none";
+        this.SDImageViewerimgReset();
+        imgEL.style.transform = 'translate(0px, 0px) scale(0)';
+      }, 150);
     }
-  });
+  };
 
-  function closeZoom() {
-    LightBox.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    imgReset();
-    imgEL.style.opacity = '0';
-  }
+  window.closeModal = imgState.SDImageViewerCloseZoom.bind(imgState);
+
+  imgEL.onload = () => {
+    imgState.SDImageViewerimgReset();
+    imgEL.style.transform = 'translate(0px, 0px) scale(1)';
+  };
+
+  imgEL.ondrag = imgEL.ondragend = imgEL.ondragstart = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
+  LightBox.onkeydown = (e) => {
+    if (window.getComputedStyle(LightBox).display === 'flex' && e.key === 'Escape') {
+      e.preventDefault();
+      imgState.SDImageViewerCloseZoom();
+    }
+  };
+
+  SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState);
+  SDImageViewerTouchEvents(imgEL, LightBox, imgState);
 }
 
-function toggleNextPrev() {
-  let imgGallery = document.querySelectorAll('div[id^="tab_"] div[id$="_results"] .thumbnail-item > img');
-  let imgSrc = new Set(Array.from(imgGallery).map(imgEL => imgEL.src));
-  let imgPrev = document.querySelector('.modalPrev');
-  let imgNext = document.querySelector('.modalNext');
+function SDImageViewerModalControls() {
+  const LightBox = document.querySelector('#lightboxModal');
+  const ModalControls = LightBox.querySelector('.modalControls');
+  const ModalClose = LightBox.querySelector('.modalClose');
+  const imgEL = LightBox.querySelector('img');
 
-  if (imgPrev && imgNext) {
-    if (imgSrc.size > 1) {
-      imgPrev.style.display = 'block';
-      imgNext.style.display = 'block';
-    } else {
-      imgPrev.style.display = 'none';
-      imgNext.style.display = 'none';
-    }
-  }
-}
+  const imgPrev = document.querySelector('#lightboxModal > .modalPrev');
+  imgPrev.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+      width="32px" height="32px" viewBox="0 0 24 24">
+      <path
+        d="m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1
+        1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z"/>
+    </svg>
+  `;
 
-function ifBoxControls(BoxControls, imgEL) {
+  const imgNext = document.querySelector('#lightboxModal > .modalNext');
+  imgNext.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+      width="32px" height="32px" viewBox="0 0 24 24">
+      <path
+        d="M5.536 21.886a1.004 1.004 0 0 0 1.033-.064l13-9a1
+        1 0 0 0 0-1.644l-13-9A1 1 0 0 0 5 3v18a1 1 0 0 0 .536.886z"/>
+    </svg>
+  `;
+
   const downloadSpan = document.createElement('span');
   downloadSpan.className = 'downloadImage cursor';
   downloadSpan.title = 'Download Image';
   downloadSpan.innerHTML = `
     <svg xmlns="http://www.w3.org/2000/svg"
-        width="32" height="32" viewBox="0 0 32 32">
+      width="32" height="32" viewBox="0 0 32 32">
       <path fill="currentColor" stroke="currentColor" stroke-width="1.8"
         d="M26 24v4H6v-4H4v4a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2v-4zm0-10
-        l-1.41-1.41L17 20.17V2h-2v18.17l-7.59-7.58L6 14l10 10l10-10z">
-      </path>
+        l-1.41-1.41L17 20.17V2h-2v18.17l-7.59-7.58L6 14l10 10l10-10z"/>
     </svg>
-    `;
-  BoxControls.appendChild(downloadSpan);
+  `;
+  ModalControls.appendChild(downloadSpan);
 
   downloadSpan.addEventListener("click", function(e) {
     if (imgEL) {
@@ -446,28 +189,91 @@ function ifBoxControls(BoxControls, imgEL) {
     }
     e.stopPropagation();
   });
+
+  ModalClose.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+      width="32px" height="32px" viewBox="0 0 512 512">
+      <path fill="currentColor" d="M330.443 256l136.765-136.765c14.058-14.058 14.058-36.85
+        0-50.908l-23.535-23.535c-14.058-14.058-36.85-14.058-50.908 0L256 181.557L119.235
+        44.792c-14.058-14.058-36.85-14.058-50.908 0L44.792 68.327c-14.058 14.058-14.058
+        36.85 0 50.908L181.557 256L44.792 392.765c-14.058 14.058-14.058 36.85 0 50.908l23.535
+        23.535c14.058 14.058 36.85 14.058 50.908 0L256 330.443l136.765 136.765c14.058 14.058
+        36.85 14.058 50.908 0l23.535-23.535c14.058-14.058 14.058-36.85 0-50.908L330.443 256z"/>
+    </svg>
+  `;
 }
 
-onUiLoaded(function () {
-  let LightBox = gradioApp().getElementById('lightboxModal');
-  let BoxControls = LightBox.getElementsByClassName('modalControls')[0];
-  let BoxClose = LightBox.querySelector('.modalClose');
-  let imgEL = LightBox.querySelector('img');
+function SDImageViewerToggleNextPrevButton() {
+  const imgGallery = document.querySelectorAll('div[id^="tab_"] div[id$="_results"] .thumbnail-item > img');
+  const imgSrc = new Set(Array.from(imgGallery).map(imgEL => imgEL.src));
+  const imgPrev = document.querySelector('.modalPrev');
+  const imgNext = document.querySelector('.modalNext');
 
-  if (BoxControls) {
-    ifBoxControls(BoxControls, imgEL);
-    ifimgEL(imgEL, LightBox, BoxClose);
+  if (imgPrev && imgNext) {
+    imgSrc.size > 1 ? 
+      (imgPrev.style.display = 'flex', imgNext.style.display = 'flex') :
+      (imgPrev.style.display = 'none', imgNext.style.display = 'none');
   }
+}
 
-  const Watcher = new MutationObserver(() => {
-    if (window.getComputedStyle(LightBox).display === 'flex') {
-      toggleNextPrev();
-      document.body.style.overflow = 'hidden';
-      setTimeout(() => {
-        imgEL.style.opacity = '1';
-      }, 10);
-    }
-  });
+var StaticImg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" viewBox="0 0 24 24"
+    fill="transparent" stroke="currentColor" stroke-width="1.5"
+    stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0.802" y="0.846" width="22.352" height="22.352" rx="2" ry="2" style=""/>
+    <circle cx="7.632" cy="7.676" r="1.862" style=""/>
+    <polyline points="23.154 15.747 16.946 9.539 3.285 23.198" style=""/>
+  </svg>
+`;
 
-  Watcher.observe(LightBox, { attributes: true, attributeFilter: ['style'] });
-});
+var LiveImg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" viewBox="0 0 24 24"
+    fill="transparent" stroke="currentColor" stroke-width="1.5"
+    stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 7.263 3.393 L 7.263 2.803 M 7.263 2.803 C 7.263 1.698 8.158 0.803 9.263
+      0.803 L 21.153 0.803 C 22.258 0.803 23.153 1.698 23.153 2.803 L 23.153 14.693 C 23.153
+      15.798 22.258 16.693 21.153 16.693 M 21.153 16.693 L 20.251 16.693" style=""/>
+    <path d="M 4.098 5.924 C 4.098 4.819 4.993 3.924 6.098 3.924 L 17.988 3.924 C 19.093
+      3.924 19.988 4.819 19.988 5.924 L 19.988 17.814 C 19.988 18.919 19.093 19.814 17.988
+      19.814 L 16.813 19.814 M 4.098 7.138 L 4.098 5.924" style=""/>
+    <path d="M 2.802 7.308 H 14.692 A 2 2 0 0 1 16.692 9.308 V 21.198 A 2 2 0 0 1 14.692
+      23.198 H 2.802 A 2 2 0 0 1 0.802 21.198 V 9.308 A 2 2 0 0 1 2.802 7.308 Z" style=""/>
+    <circle cx="5.658" cy="12.163" r="1.324" style=""/>
+    <polyline points="16.692 17.901 12.279 13.488 2.567 23.198" style=""/>
+  </svg>
+`;
+
+window.modalLivePreviewToggle = function(event) {
+  const LiveToggle = gradioApp().getElementById("modal_toggle_live_preview");
+  opts.js_live_preview_in_modal_lightbox = !opts.js_live_preview_in_modal_lightbox;
+  LiveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? LiveImg : StaticImg;
+  event.stopPropagation();
+}
+
+window.showModal = function(event) {
+  SDImageViewerToggleNextPrevButton();
+
+  const AppGradio = document.querySelector('body > gradio-app');
+  const LightBox = gradioApp().getElementById("lightboxModal");
+  const source = event.target || event.srcElement;
+  const imgEL = gradioApp().getElementById("modalImage");
+  const LiveToggle = gradioApp().getElementById("modal_toggle_live_preview");
+
+  LiveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? LiveImg : StaticImg;
+  imgEL.src = source.src;
+  if (imgEL.style.display === 'none') LightBox.style.setProperty('background-image', 'url(' + source.src + ')');
+
+  LightBox.style.display = "flex";
+  LightBox.focus();
+
+  let GradioWidth = AppGradio ? AppGradio.offsetWidth : 0;
+
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => LightBox.style.opacity = '1', 50);
+  setTimeout(() => imgEL.style.transform = 'translate(0px, 0px) scale(1)', 300);
+
+  const newWidth = AppGradio.offsetWidth;
+  const widthDifference = newWidth - GradioWidth;
+  if (widthDifference > 0) AppGradio.style.paddingRight = widthDifference + 'px';
+  event.stopPropagation();
+}
