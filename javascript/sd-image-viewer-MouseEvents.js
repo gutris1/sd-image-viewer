@@ -1,6 +1,11 @@
 function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
+  const ModalControls = LightBox.querySelector('.modalControls');
+  const imgPrev = LightBox.querySelector('.modalPrev');
+  const imgNext = LightBox.querySelector('.modalNext');
+
   let GropinTime = null;
   let Groped = false;
+  let wheelTimeout;
 
   imgEL.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
@@ -11,6 +16,10 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
       imgEL.style.cursor = 'grab';
       imgState.lastX = e.clientX - imgState.offsetX;
       imgState.lastY = e.clientY - imgState.offsetY;
+
+      ModalControls.style.opacity = '0';
+      imgPrev.style.opacity = '0';
+      imgNext.style.opacity = '0';
     }, 100);
   });
 
@@ -39,13 +48,13 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
     } else if (imgELW <= imgBoxW && imgELH >= imgBoxH) {
       imgState.offsetY = deltaY;
       const EdgeY = (imgELH - imgBoxH) / 2;
-      imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapMeter), -EdgeY - imgState.SnapMeter);
+      imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapMouse), -EdgeY - imgState.SnapMouse);
       imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
 
     } else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
       imgState.offsetX = deltaX;
       const EdgeX = (imgELW - imgBoxW) / 2;
-      imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapMeter), -EdgeX - imgState.SnapMeter);
+      imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapMouse), -EdgeX - imgState.SnapMouse);
       imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
 
     } else if (imgELW >= imgBoxW && imgELH >= imgBoxH) {
@@ -53,10 +62,10 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
       imgState.offsetY = deltaY;
 
       const EdgeX = (imgELW - imgBoxW) / 2;
-      imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapMeter), -EdgeX - imgState.SnapMeter);
+      imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapMouse), -EdgeX - imgState.SnapMouse);
 
       const EdgeY = (imgELH - imgBoxH) / 2;
-      imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapMeter), -EdgeY - imgState.SnapMeter);
+      imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapMouse), -EdgeY - imgState.SnapMouse);
 
       imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
     }
@@ -70,10 +79,15 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
       ModalClose.onclick = (e) => (e.preventDefault(), imgState.SDImageViewerCloseZoom());
       return;
     }
+
     imgState.SDImageViewerSnapBack(imgEL, LightBox);
     Groped = false;
     imgEL.style.cursor = 'auto';
     setTimeout(() => (imgEL.style.transition = 'transform 0s ease'), 100);
+
+    ModalControls.style.opacity = '1';
+    imgPrev.style.opacity = '1';
+    imgNext.style.opacity = '1';
   });
 
   document.addEventListener('mouseleave', (e) => {
@@ -81,12 +95,20 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
       imgState.SDImageViewerSnapBack(imgEL, LightBox);
       Groped = false;
       imgEL.style.cursor = 'auto';
+
+      ModalControls.style.opacity = '1';
+      imgPrev.style.opacity = '1';
+      imgNext.style.opacity = '1';
     }
   });
 
   imgEL.addEventListener('wheel', (e) => {
     e.stopPropagation();
     e.preventDefault();
+
+    ModalControls.style.opacity = '0';
+    imgPrev.style.opacity = '0';
+    imgNext.style.opacity = '0';
 
     const currentTime = Date.now();
     const timeDelta = currentTime - imgState.LastZoom;
@@ -154,5 +176,12 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
     }
 
     imgState.ZoomMomentum *= 0.5;
+
+    clearTimeout(wheelTimeout);
+    wheelTimeout = setTimeout(() => {
+      ModalControls.style.opacity = '1';
+      imgPrev.style.opacity = '1';
+      imgNext.style.opacity = '1';
+    }, 300);
   }, { passive: false });
 }
