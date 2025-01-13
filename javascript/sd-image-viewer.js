@@ -20,7 +20,8 @@ function SDImageViewerimgEL() {
     LastTouch: 0,
     ZoomMomentum: 0,
     LastZoom: 0,
-    SnapMeter: 20,
+    SnapMouse: 20,
+    SnapTouch: 10,
 
     TouchGrass: {
       touchScale: false,
