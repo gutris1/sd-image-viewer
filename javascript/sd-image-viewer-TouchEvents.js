@@ -1,7 +1,10 @@
 function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
+  const ModalControls = LightBox.querySelector('.modalControls');
+  const imgPrev = LightBox.querySelector('.modalPrev');
+  const imgNext = LightBox.querySelector('.modalNext');
+
   let MultiGrope = false;
-  let velocityX = 0;
-  let velocityY = 0;
+  let DragSpeed = 1.5;
 
   LightBox.addEventListener('touchmove', (e) => {
     if (e.target !== imgEL) e.stopPropagation(), e.preventDefault();
@@ -10,8 +13,9 @@ function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
   imgEL.addEventListener('touchstart', (e) => {
     e.stopPropagation();
     imgEL.style.transition = 'none';
-    velocityX = 0;
-    velocityY = 0;
+    ModalControls.style.opacity = '0';
+    imgPrev.style.opacity = '0';
+    imgNext.style.opacity = '0';
 
     if (e.targetTouches[1]) {
       MultiGrope = true;
@@ -27,11 +31,9 @@ function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
       );
     } else {
       MultiGrope = false;
-
       if (!imgState.TouchGrass.touchScale) {
         imgState.lastX = e.targetTouches[0].clientX;
         imgState.lastY = e.targetTouches[0].clientY;
-        imgState.LastTouch = Date.now();
       }
     }
   });
@@ -40,7 +42,7 @@ function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
     e.stopPropagation();
     e.preventDefault();
     imgEL.onclick = (e) => e.stopPropagation();
-    imgEL.style.transition = 'none';
+    imgEL.style.transition = 'transform 60ms ease';
 
     if (e.targetTouches[1]) {
       imgState.TouchGrass.delta1X = e.targetTouches[0].clientX;
@@ -65,60 +67,105 @@ function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
       let imgCenterX = imgState.offsetX + centerX;
       let imgCenterY = imgState.offsetY + centerY;
 
-      imgState.offsetX = deltaCenterX - ((deltaCenterX - imgCenterX) / lastScale) * imgState.scale - centerX;
-      imgState.offsetY = deltaCenterY - ((deltaCenterY - imgCenterY) / lastScale) * imgState.scale - centerY;
-      imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
+      const imgELW = imgEL.offsetWidth * imgState.scale;
+      const imgELH = imgEL.offsetHeight * imgState.scale;
+      const imgBoxW = LightBox.offsetWidth;
+      const imgBoxH = LightBox.offsetHeight;
+
+      let newOffsetX = deltaCenterX - ((deltaCenterX - imgCenterX) / lastScale) * imgState.scale - centerX;
+      let newOffsetY = deltaCenterY - ((deltaCenterY - imgCenterY) / lastScale) * imgState.scale - centerY;
+
+      if (imgState.scale <= 1) {
+        imgState.offsetX = 0;
+        imgState.offsetY = 0;
+        imgEL.style.transform = `translate(0px, 0px) scale(${imgState.scale})`;
+
+      } else if (imgELW <= imgBoxW && imgELH >= imgBoxH) {
+        imgState.offsetX = 0;
+        imgState.offsetY = newOffsetY;
+        const EdgeY = (imgELH - imgBoxH) / 2;
+        imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapTouch), -EdgeY - imgState.SnapTouch);
+        imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
+
+      } else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
+        imgState.offsetX = newOffsetX;
+        imgState.offsetY = 0;
+        const EdgeX = (imgELW - imgBoxW) / 2;
+        imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapTouch), -EdgeX - imgState.SnapTouch);
+        imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
+
+      } else if (imgELW >= imgBoxW && imgELH >= imgBoxH) {
+        imgState.offsetX = newOffsetX;
+        imgState.offsetY = newOffsetY;
+
+        const EdgeX = (imgELW - imgBoxW) / 2;
+        imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapTouch), -EdgeX - imgState.SnapTouch);
+
+        const EdgeY = (imgELH - imgBoxH) / 2;
+        imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapTouch), -EdgeY - imgState.SnapTouch);
+
+        imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
+      }
 
     } else if (!imgState.TouchGrass.touchScale) {
-      let now = Date.now();
-      let currentX = e.targetTouches[0].clientX;
-      let currentY = e.targetTouches[0].clientY;
-      let deltaX = currentX - imgState.lastX;
-      let deltaY = currentY - imgState.lastY;
-      let timeDelta = now - imgState.LastTouch;
-
-      velocityX = deltaX / timeDelta;
-      velocityY = deltaY / timeDelta;
-
-      imgState.offsetX += deltaX;
-      imgState.offsetY += deltaY;
-      imgState.lastX = currentX;
-      imgState.lastY = currentY;
-      imgState.LastTouch = now;
+      const currentX = e.targetTouches[0].clientX;
+      const currentY = e.targetTouches[0].clientY;
+      const deltaX = (currentX - imgState.lastX) * DragSpeed;
+      const deltaY = (currentY - imgState.lastY) * DragSpeed;
 
       const imgELW = imgEL.offsetWidth * imgState.scale;
       const imgELH = imgEL.offsetHeight * imgState.scale;
       const imgBoxW = LightBox.offsetWidth;
       const imgBoxH = LightBox.offsetHeight;
 
-      if (imgELW <= imgBoxW) {
+      if (imgState.scale <= 1) {
         imgState.offsetX = 0;
-      } else {
+        imgState.offsetY = 0;
+        imgEL.style.transform = `translate(0px, 0px) scale(${imgState.scale})`;
+
+      } else if (imgELW <= imgBoxW && imgELH >= imgBoxH) {
+        imgState.offsetY += deltaY;
+        const EdgeY = (imgELH - imgBoxH) / 2;
+        imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapTouch), -EdgeY - imgState.SnapTouch);
+        imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
+
+      } else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
+        imgState.offsetX += deltaX;
         const EdgeX = (imgELW - imgBoxW) / 2;
-        if (imgState.offsetX > EdgeX + imgState.SnapMeter) imgState.offsetX = EdgeX + imgState.SnapMeter;
-        else if (imgState.offsetX < -EdgeX - imgState.SnapMeter) imgState.offsetX = -EdgeX - imgState.SnapMeter;
+        imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapTouch), -EdgeX - imgState.SnapTouch);
+        imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
+
+      } else if (imgELW >= imgBoxW && imgELH >= imgBoxH) {
+        imgState.offsetX += deltaX;
+        imgState.offsetY += deltaY;
+
+        const EdgeX = (imgELW - imgBoxW) / 2;
+        imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapTouch), -EdgeX - imgState.SnapTouch);
+
+        const EdgeY = (imgELH - imgBoxH) / 2;
+        imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapTouch), -EdgeY - imgState.SnapTouch);
+
+        imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
       }
 
-      if (imgELH <= imgBoxH) {
-        imgState.offsetY = 0;
-      } else {
-        const EdgeY = (imgELH - imgBoxH) / 2;
-        if (imgState.offsetY > EdgeY + imgState.SnapMeter) imgState.offsetY = EdgeY + imgState.SnapMeter;
-        else if (imgState.offsetY < -EdgeY - imgState.SnapMeter) imgState.offsetY = -EdgeY - imgState.SnapMeter;
-      }
-  
-      imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
+      imgState.lastX = currentX;
+      imgState.lastY = currentY;
     }
   });
 
   imgEL.addEventListener('touchcancel', (e) => {
     e.stopPropagation();
     e.preventDefault();
+
+    ModalControls.style.opacity = '1';
+    imgPrev.style.opacity = '1';
+    imgNext.style.opacity = '1';
+
     imgEL.onclick = undefined;
-    imgEL.style.transition = 'none';
-    imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
     MultiGrope = false;
     imgState.TouchGrass.touchScale = false;
+    imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
+    imgState.SDImageViewerSnapBack(imgEL, LightBox);
   });
 
   imgEL.addEventListener('touchend', (e) => {
@@ -126,37 +173,16 @@ function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
     imgEL.onclick = undefined;
     imgEL.style.transition = 'none';
 
-    if (e.targetTouches.length === 0) {
-      if (MultiGrope) {
-        MultiGrope = false;
-        imgState.TouchGrass.touchScale = false;
-      } else {
-        if (!imgState.TouchGrass.touchScale && (Math.abs(velocityX) > 0.05 || Math.abs(velocityY) > 0.05)) {
-          TouchMomentum();
-        }
-      }
+    ModalControls.style.opacity = '1';
+    imgPrev.style.opacity = '1';
+    imgNext.style.opacity = '1';
 
+    if (e.targetTouches.length === 0) {
+      if (MultiGrope) MultiGrope = false; imgState.TouchGrass.touchScale = false;
+      imgState.SDImageViewerSnapBack(imgEL, LightBox);
       setTimeout(() => {
         imgState.TouchGrass.touchScale = false;
       }, 10);
     }
   });
-
-  function TouchMomentum() {
-    let momentumDecay = 0.95;
-    let momentumMultiplier = 15;
-    let momentumThreshold = 0.05;
-  
-    if (Math.abs(velocityX) > momentumThreshold || Math.abs(velocityY) > momentumThreshold) {
-      imgState.offsetX += velocityX * momentumMultiplier;
-      imgState.offsetY += velocityY * momentumMultiplier;
-      velocityX *= momentumDecay;
-      velocityY *= momentumDecay;
-      imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
-      requestAnimationFrame(TouchMomentum);
-    } else {
-      velocityX = 0;
-      velocityY = 0;
-    }
-  }
 }
