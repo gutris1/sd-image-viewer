@@ -5,7 +5,6 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
 
   let GropinTime = null;
   let Groped = false;
-  let wheelTimeout;
 
   imgEL.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
@@ -106,10 +105,6 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
     e.stopPropagation();
     e.preventDefault();
 
-    ModalControls.style.opacity = '0';
-    imgPrev.style.opacity = '0';
-    imgNext.style.opacity = '0';
-
     const currentTime = Date.now();
     const timeDelta = currentTime - imgState.LastZoom;
     imgState.LastZoom = currentTime;
@@ -176,12 +171,5 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
     }
 
     imgState.ZoomMomentum *= 0.5;
-
-    clearTimeout(wheelTimeout);
-    wheelTimeout = setTimeout(() => {
-      ModalControls.style.opacity = '1';
-      imgPrev.style.opacity = '1';
-      imgNext.style.opacity = '1';
-    }, 300);
   }, { passive: false });
 }
