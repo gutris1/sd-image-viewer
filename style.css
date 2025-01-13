@@ -2,7 +2,7 @@
   overflow: hidden;
   backdrop-filter: blur(10px);
   background-color: rgba(0, 0, 0, 0.8);
-  transition: transform 0.3s ease, opacity 0.4s ease;
+  transition: opacity 0.3s ease;
   opacity: 0;
   transform: translate(0px, 0px) scale(1);
 }
@@ -59,7 +59,7 @@
 }
 
 .modalToggleLivePreview {
-  top: 0;
+  top: 14px;
   left: 70px;
 }
 
@@ -96,7 +96,7 @@
   color: var(--button-secondary-text-color-hover) !important;
 }
 
-.downloadImage svg, .modalClose svg,
+.downloadImage svg, .modalClose svg, .modalToggleLivePreview svg,
 .modalPrev svg, .modalNext svg {
   filter: drop-shadow(0 0 3px #000);
 }
