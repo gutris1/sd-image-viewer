@@ -24,6 +24,7 @@
 
 .modalControls {
   pointer-events: none;
+  transition: 0.3s ease;
 }
 
 .modalControls:hover {
@@ -38,7 +39,6 @@
   pointer-events: auto;
   filter: brightness(1);
   text-shadow: 0 0 7px black !important;
-  transition: 0.3s ease;
   position: absolute !important;
   width: auto !important;
 }
