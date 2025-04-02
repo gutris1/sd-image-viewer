@@ -1,5 +1,7 @@
-function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
+function SDImageViewerTouchEvents(imgState) {
+  const LightBox = document.getElementById('lightboxModal');
   const ModalControls = LightBox.querySelector('.modalControls');
+  const imgEL = LightBox.querySelector('#modalImage');
   const imgPrev = LightBox.querySelector('.modalPrev');
   const imgNext = LightBox.querySelector('.modalNext');
 
@@ -59,43 +61,43 @@ function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
 
       const imgELW = imgEL.offsetWidth * imgState.scale;
       const imgELH = imgEL.offsetHeight * imgState.scale;
-      const imgBoxW = LightBox.offsetWidth;
-      const imgBoxH = LightBox.offsetHeight;
+      const LightBoxW = LightBox.offsetWidth;
+      const LightBoxH = LightBox.offsetHeight;
 
       if (imgState.scale <= 1) {
         imgState.offsetX = 0;
         imgState.offsetY = 0;
         imgEL.style.transform = `translate(0px, 0px) scale(${imgState.scale})`;
 
-      } else if (imgELW <= imgBoxW && imgELH >= imgBoxH) {
+      } else if (imgELW <= LightBoxW && imgELH >= LightBoxH) {
         const imgCenterY = imgState.offsetY + centerY;
         imgState.offsetY = pinchCenterY - ((pinchCenterY - imgCenterY) / prevScale) * imgState.scale - centerY;
 
-        const EdgeY = (imgELH - imgBoxH) / 2;
+        const EdgeY = (imgELH - LightBoxH) / 2;
         if (imgState.offsetY > EdgeY) imgState.offsetY = EdgeY;
         else if (imgState.offsetY < -EdgeY) imgState.offsetY = -EdgeY;
 
         imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
 
-      } else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
+      } else if (imgELH <= LightBoxH && imgELW >= LightBoxW) {
         const imgCenterX = imgState.offsetX + centerX;
         imgState.offsetX = pinchCenterX - ((pinchCenterX - imgCenterX) / prevScale) * imgState.scale - centerX;
 
-        const EdgeX = (imgELW - imgBoxW) / 2;
+        const EdgeX = (imgELW - LightBoxW) / 2;
         if (imgState.offsetX > EdgeX) imgState.offsetX = EdgeX;
         else if (imgState.offsetX < -EdgeX) imgState.offsetX = -EdgeX;
 
         imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
 
-      } else if (imgELW >= imgBoxW && imgELH >= imgBoxH) {
+      } else if (imgELW >= LightBoxW && imgELH >= LightBoxH) {
         const imgCenterX = imgState.offsetX + centerX;
         const imgCenterY = imgState.offsetY + centerY;
 
         imgState.offsetX = pinchCenterX - ((pinchCenterX - imgCenterX) / prevScale) * imgState.scale - centerX;
         imgState.offsetY = pinchCenterY - ((pinchCenterY - imgCenterY) / prevScale) * imgState.scale - centerY;
 
-        const EdgeX = (imgELW - imgBoxW) / 2;
-        const EdgeY = (imgELH - imgBoxH) / 2;
+        const EdgeX = (imgELW - LightBoxW) / 2;
+        const EdgeY = (imgELH - LightBoxH) / 2;
 
         if (imgState.offsetX > EdgeX) imgState.offsetX = EdgeX;
         else if (imgState.offsetX < -EdgeX) imgState.offsetX = -EdgeX;
@@ -115,32 +117,32 @@ function SDImageViewerTouchEvents(imgEL, LightBox, imgState) {
 
       const imgELW = imgEL.offsetWidth * imgState.scale;
       const imgELH = imgEL.offsetHeight * imgState.scale;
-      const imgBoxW = LightBox.offsetWidth;
-      const imgBoxH = LightBox.offsetHeight;
+      const LightBoxW = LightBox.offsetWidth;
+      const LightBoxH = LightBox.offsetHeight;
 
       if (imgState.scale <= 1) {
         imgState.offsetX = 0;
         imgState.offsetY = 0;
         imgEL.style.transform = `translate(0px, 0px) scale(${imgState.scale})`;
 
-      } else if (imgELW <= imgBoxW && imgELH >= imgBoxH) {
+      } else if (imgELW <= LightBoxW && imgELH >= LightBoxH) {
         imgState.offsetY += deltaY;
-        const EdgeY = (imgELH - imgBoxH) / 2;
+        const EdgeY = (imgELH - LightBoxH) / 2;
         imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapTouch), -EdgeY - imgState.SnapTouch);
         imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
 
-      } else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
+      } else if (imgELH <= LightBoxH && imgELW >= LightBoxW) {
         imgState.offsetX += deltaX;
-        const EdgeX = (imgELW - imgBoxW) / 2;
+        const EdgeX = (imgELW - LightBoxW) / 2;
         imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapTouch), -EdgeX - imgState.SnapTouch);
         imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
 
-      } else if (imgELW >= imgBoxW && imgELH >= imgBoxH) {
+      } else if (imgELW >= LightBoxW && imgELH >= LightBoxH) {
         imgState.offsetX += deltaX;
         imgState.offsetY += deltaY;
 
-        const EdgeX = (imgELW - imgBoxW) / 2;
-        const EdgeY = (imgELH - imgBoxH) / 2;
+        const EdgeX = (imgELW - LightBoxW) / 2;
+        const EdgeY = (imgELH - LightBoxH) / 2;
 
         imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapTouch), -EdgeX - imgState.SnapTouch);
         imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapTouch), -EdgeY - imgState.SnapTouch);
