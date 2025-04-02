@@ -1,5 +1,8 @@
-function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
+function SDImageViewerMouseEvents(imgState) {
+  const LightBox = document.getElementById('lightboxModal');
   const ModalControls = LightBox.querySelector('.modalControls');
+  const ModalClose = LightBox.querySelector('.modalClose');
+  const imgEL = LightBox.querySelector('#modalImage');
   const imgPrev = LightBox.querySelector('.modalPrev');
   const imgNext = LightBox.querySelector('.modalNext');
 
@@ -31,8 +34,8 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
 
     const imgELW = imgEL.offsetWidth * imgState.scale;
     const imgELH = imgEL.offsetHeight * imgState.scale;
-    const imgBoxW = LightBox.offsetWidth;
-    const imgBoxH = LightBox.offsetHeight;
+    const LightBoxW = LightBox.offsetWidth;
+    const LightBoxH = LightBox.offsetHeight;
 
     const deltaX = e.clientX - imgState.lastX;
     const deltaY = e.clientY - imgState.lastY;
@@ -44,26 +47,26 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
       imgState.offsetY = 0;
       imgEL.style.transform = `translateX(0px) scale(${imgState.scale})`;
 
-    } else if (imgELW <= imgBoxW && imgELH >= imgBoxH) {
+    } else if (imgELW <= LightBoxW && imgELH >= LightBoxH) {
       imgState.offsetY = deltaY;
-      const EdgeY = (imgELH - imgBoxH) / 2;
+      const EdgeY = (imgELH - LightBoxH) / 2;
       imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapMouse), -EdgeY - imgState.SnapMouse);
       imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
 
-    } else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
+    } else if (imgELH <= LightBoxH && imgELW >= LightBoxW) {
       imgState.offsetX = deltaX;
-      const EdgeX = (imgELW - imgBoxW) / 2;
+      const EdgeX = (imgELW - LightBoxW) / 2;
       imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapMouse), -EdgeX - imgState.SnapMouse);
       imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
 
-    } else if (imgELW >= imgBoxW && imgELH >= imgBoxH) {
+    } else if (imgELW >= LightBoxW && imgELH >= LightBoxH) {
       imgState.offsetX = deltaX;
       imgState.offsetY = deltaY;
 
-      const EdgeX = (imgELW - imgBoxW) / 2;
+      const EdgeX = (imgELW - LightBoxW) / 2;
       imgState.offsetX = Math.max(Math.min(imgState.offsetX, EdgeX + imgState.SnapMouse), -EdgeX - imgState.SnapMouse);
 
-      const EdgeY = (imgELH - imgBoxH) / 2;
+      const EdgeY = (imgELH - LightBoxH) / 2;
       imgState.offsetY = Math.max(Math.min(imgState.offsetY, EdgeY + imgState.SnapMouse), -EdgeY - imgState.SnapMouse);
 
       imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
@@ -105,71 +108,99 @@ function SDImageViewerMouseEvents(imgEL, LightBox, ModalClose, imgState) {
     e.stopPropagation();
     e.preventDefault();
 
+    const CTRL = e.ctrlKey || e.metaKey;
+    const SHIFT = e.shiftKey;
+
     const currentTime = Date.now();
     const timeDelta = currentTime - imgState.LastZoom;
     imgState.LastZoom = currentTime;
+
     const centerX = LightBox.offsetWidth / 2;
     const centerY = LightBox.offsetHeight / 2;
     const delta = Math.max(-1, Math.min(1, e.wheelDelta || -e.detail));
     const zoomStep = 0.15;
     const zoom = 1 + delta * zoomStep;
+    const moveStep = 30 * imgState.scale;
     const lastScale = imgState.scale;
-    imgState.scale *= zoom;
-    imgState.scale = Math.max(1, Math.min(imgState.scale, 10));
+
+    if (!CTRL && !SHIFT) {
+      imgState.scale *= zoom;
+      imgState.scale = Math.max(1, Math.min(imgState.scale, 10));
+    }
+
     imgState.ZoomMomentum = delta / (timeDelta * 0.5 || 1);
     imgState.ZoomMomentum = Math.min(Math.max(imgState.ZoomMomentum, -1.5), 1.5);
+    const ZoomFactor = Math.abs(imgState.ZoomMomentum);
+    const ZoomTransition = `transform ${0.4 * (1 + ZoomFactor)}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
+
+    imgState.MoveMomentum = delta / (timeDelta * 0.1 || 1);
+    imgState.MoveMomentum = Math.min(Math.max(imgState.MoveMomentum, -2), 2);
+    const MoveFactor = Math.abs(imgState.MoveMomentum);
+    const MoveTransition = `transform ${0.2 * (1 + MoveFactor)}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
+
+    imgEL.style.transition = (CTRL || SHIFT) ? MoveTransition : ZoomTransition;
+    const SCALE = (CTRL || SHIFT) ? lastScale : imgState.scale;
 
     const imgELW = imgEL.offsetWidth * imgState.scale;
     const imgELH = imgEL.offsetHeight * imgState.scale;
-    const imgBoxW = LightBox.offsetWidth;
-    const imgBoxH = LightBox.offsetHeight;
-
-    const momentumFactor = Math.abs(imgState.ZoomMomentum);
-    const ZoomTransition = `transform ${0.4 * (1 + momentumFactor)}s cubic-bezier(0.25, 0.1, 0.25, 1)`;
-    imgEL.style.transition = ZoomTransition;
+    const LightBoxW = LightBox.offsetWidth;
+    const LightBoxH = LightBox.offsetHeight;
 
     if (imgState.scale <= 1) {
-      imgState.offsetX = 0;
-      imgState.offsetY = 0;
-      imgEL.style.transform = `translate(0px, 0px) scale(${imgState.scale})`;
+      imgEL.style.transform = 'translate(0px, 0px) scale(1)';
 
-    } else if (imgELW <= imgBoxW && imgELH >= imgBoxH) {
-      const imgCenterY = imgState.offsetY + centerY;
-      imgState.offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * imgState.scale - centerY;
+    } else if (imgELW <= LightBoxW && imgELH >= LightBoxH) {
+      if (CTRL) {
+        imgState.offsetY -= delta * moveStep;
+      } else {
+        const imgCenterY = imgState.offsetY + centerY;
+        imgState.offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * imgState.scale - centerY;
+      }
 
-      const EdgeY = (imgELH - imgBoxH) / 2;
+      const EdgeY = (imgELH - LightBoxH) / 2;
       if (imgState.offsetY > EdgeY) imgState.offsetY = EdgeY;
       else if (imgState.offsetY < -EdgeY) imgState.offsetY = -EdgeY;
 
-      imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${imgState.scale})`;
+      imgEL.style.transform = `translateY(${imgState.offsetY}px) scale(${SCALE})`;
 
-    } else if (imgELH <= imgBoxH && imgELW >= imgBoxW) {
-      const imgCenterX = imgState.offsetX + centerX;
-      imgState.offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * imgState.scale - centerX;
+    } else if (imgELH <= LightBoxH && imgELW >= LightBoxW) {
+      if (SHIFT) {
+        imgState.offsetX -= delta * moveStep;
+      } else {
+        const imgCenterX = imgState.offsetX + centerX;
+        imgState.offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * imgState.scale - centerX;
+      }
 
-      const EdgeX = (imgELW - imgBoxW) / 2;
+      const EdgeX = (imgELW - LightBoxW) / 2;
       if (imgState.offsetX > EdgeX) imgState.offsetX = EdgeX;
       else if (imgState.offsetX < -EdgeX) imgState.offsetX = -EdgeX;
 
-      imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${imgState.scale})`;
+      imgEL.style.transform = `translateX(${imgState.offsetX}px) scale(${SCALE})`;
 
-    } else if (imgELW >= imgBoxW && imgELH >= imgBoxH) {
-      const imgCenterX = imgState.offsetX + centerX;
-      const imgCenterY = imgState.offsetY + centerY;
-      imgState.offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * imgState.scale - centerX;
-      imgState.offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * imgState.scale - centerY;
+    } else if (imgELW >= LightBoxW && imgELH >= LightBoxH) {
+      if (CTRL) {
+        imgState.offsetY -= delta * moveStep;
+      } else if (SHIFT) {
+        imgState.offsetX -= delta * moveStep;
+      } else if (!SHIFT && !CTRL) {
+        const imgCenterX = imgState.offsetX + centerX;
+        const imgCenterY = imgState.offsetY + centerY;
+        imgState.offsetX = e.clientX - ((e.clientX - imgCenterX) / lastScale) * imgState.scale - centerX;
+        imgState.offsetY = e.clientY - ((e.clientY - imgCenterY) / lastScale) * imgState.scale - centerY;
+      }
 
-      const EdgeX = (imgELW - imgBoxW) / 2;
+      const EdgeX = (imgELW - LightBoxW) / 2;
       if (imgState.offsetX > EdgeX) imgState.offsetX = EdgeX;
       else if (imgState.offsetX < -EdgeX) imgState.offsetX = -EdgeX;
 
-      const EdgeY = (imgELH - imgBoxH) / 2;
+      const EdgeY = (imgELH - LightBoxH) / 2;
       if (imgState.offsetY > EdgeY) imgState.offsetY = EdgeY;
       else if (imgState.offsetY < -EdgeY) imgState.offsetY = -EdgeY;
 
-      imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${imgState.scale})`;
+      imgEL.style.transform = `translate(${imgState.offsetX}px, ${imgState.offsetY}px) scale(${SCALE})`;
     }
 
     imgState.ZoomMomentum *= 0.5;
+    imgState.MoveMomentum *= 0.1;
   }, { passive: false });
 }
