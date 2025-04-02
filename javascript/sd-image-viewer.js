@@ -47,19 +47,19 @@ function SDImageViewerEL() {
 
       const imgELW = imgEL.offsetWidth * this.scale;
       const imgELH = imgEL.offsetHeight * this.scale;
-      const imgBoxW = LightBox.offsetWidth;
-      const imgBoxH = LightBox.offsetHeight;
+      const LightBoxW = LightBox.offsetWidth;
+      const LightBoxH = LightBox.offsetHeight;
 
-      if (imgELW <= imgBoxW) {
-        const EdgeY = (imgELH - imgBoxH) / 2;
+      if (imgELW <= LightBoxW) {
+        const EdgeY = (imgELH - LightBoxH) / 2;
         if (this.offsetY > EdgeY) this.offsetY = EdgeY;
         else if (this.offsetY < -EdgeY) this.offsetY = -EdgeY;
 
         imgEL.style.transition = 'transform 0.3s ease';
         imgEL.style.transform = `translateY(${this.offsetY}px) scale(${this.scale})`;
 
-      } else if (imgELH <= imgBoxH) {
-        const EdgeX = (imgELW - imgBoxW) / 2;
+      } else if (imgELH <= LightBoxH) {
+        const EdgeX = (imgELW - LightBoxW) / 2;
         if (this.offsetX > EdgeX) this.offsetX = EdgeX;
         else if (this.offsetX < -EdgeX) this.offsetX = -EdgeX;
 
@@ -67,11 +67,11 @@ function SDImageViewerEL() {
         imgEL.style.transform = `translateX(${this.offsetX}px) scale(${this.scale})`;
 
       } else {
-        const EdgeX = (imgELW - imgBoxW) / 2;
+        const EdgeX = (imgELW - LightBoxW) / 2;
         if (this.offsetX > EdgeX) this.offsetX = EdgeX;
         else if (this.offsetX < -EdgeX) this.offsetX = -EdgeX;
 
-        const EdgeY = (imgELH - imgBoxH) / 2;
+        const EdgeY = (imgELH - LightBoxH) / 2;
         if (this.offsetY > EdgeY) this.offsetY = EdgeY;
         else if (this.offsetY < -EdgeY) this.offsetY = -EdgeY;
 
