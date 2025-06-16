@@ -2,9 +2,8 @@
   overflow: hidden;
   backdrop-filter: blur(10px);
   background-color: rgba(0, 0, 0, 0.8);
-  transition: opacity 0.3s ease;
   opacity: 0;
-  transform: translate(0px, 0px) scale(1);
+  transition: opacity .3s ease;
 }
 
 #modalWrapper {
@@ -14,9 +13,8 @@
   justify-content: center;
   height: 100%;
   width: 100%;
-  opacity: 0;
-  transform: translate(0px, 0px) scale(0);
-  transition: transform 0.3s ease, opacity 0.4s ease;
+  transform: translate(0px, 0px) scale(0.7);
+  transition: transform .2s ease-out;
 }
 
 #modalImage {
@@ -29,26 +27,36 @@
   object-fit: contain;
   user-select: none;
   background-color: var(--input-background-fill);
-  transition: transform 0.3s ease;
-  transform: translate(0px, 0px) scale(1);
+  transform: translate(0px, 0px) scale(1.0001);
 }
 
 #modalImage:focus {
   outline: none;
 }
 
-.modalControls {
+#lightboxModal > .modalControls {
+  height: 100%;
+  padding: 0px !important;
   pointer-events: none;
-  transition: 0.3s ease;
 }
 
-.modalControls:hover {
+#lightboxModal > .modalControls * {
+  transition: opacity 0.3s ease;
+}
+
+#lightboxModal > .modalControls.sd-image-viewer-pointer-events-none * {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+#lightboxModal > .modalControls:hover {
   background-color: transparent !important;
 }
 
-.modalControls span {
+#lightboxModal > .modalControls span {
   display: flex;
   z-index: 9999;
+  top: 5px;
   color: var(--button-secondary-text-color) !important;
   pointer-events: auto;
   filter: brightness(1);
@@ -56,10 +64,9 @@
   position: absolute !important;
   width: auto !important;
   transition: 0.3s ease;
-  top: 10px;
 }
 
-.modalControls span:hover {
+#lightboxModal > .modalControls span:hover {
   filter: brightness(1);
   transform: scale(1.3);
   color: var(--button-secondary-text-color-hover) !important;
@@ -71,43 +78,51 @@
   display: none !important;
 }
 
-#lightboxModal .modalNext,
-.modalClose {
-  right: 10px;
-}
-
 .modalToggleLivePreview {
   left: 65px;
 }
 
+#lightboxModal .modalNext,
+.modalClose {
+  right: 5px;
+}
+
 #lightboxModal .modalPrev,
 .downloadImage {
-  left: 10px;
+  left: 5px;
 }
 
-.modalPrev,
-.modalNext {
+.downloadImage svg,
+.modalClose svg,
+.modalToggleLivePreview svg {
+  height: 45px;
+  width: 45px;
+  filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 3px #000);
+}
+
+#lightboxModal .modalPrev,
+#lightboxModal .modalNext {
   z-index: 9999;
+  top: 50%;
   color: var(--button-secondary-text-color) !important;
-  font-size: 30px !important;
-  transition: 0.3s ease !important;
   padding: 0;
   margin: 0;
+  pointer-events: auto;
+  transition: 0.3s ease !important;
 }
 
-.modalPrev:hover,
-.modalNext:hover {
+#lightboxModal .modalPrev svg,
+#lightboxModal .modalNext svg {
+  height: 45px;
+  width: 45px;
+  filter: drop-shadow(0 0 4px rgb(0 0 0 / 60%)) drop-shadow(0 0 3px rgb(0 0 0 / 60%)) drop-shadow(0 0 2px rgb(0 0 0 / 90%));
+}
+
+#lightboxModal .modalPrev:hover,
+#lightboxModal .modalNext:hover {
   filter: brightness(1);
   background-color: transparent !important;
   background: transparent !important;
   transform: scale(1.4);
   color: var(--button-secondary-text-color-hover) !important;
-}
-
-.downloadImage svg,
-.modalClose svg,
-.modalToggleLivePreview svg,
-.modalPrev svg,
-.modalNext svg {
-  filter: drop-shadow(0 0 1px #000) drop-shadow(0 0 3px #000);
 }

@@ -1,142 +1,20 @@
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelector('#lightboxModal > .modalControls') && SDImageViewerEL();
+  document.querySelector('#lightboxModal > .modalControls') && SDImageViewer();
 });
 
-function SDImageViewerEL() {
+function SDImageViewer() {
   const LightBox = document.getElementById('lightboxModal');
-  const ModalControls = LightBox.querySelector('.modalControls');
+  const Control = LightBox.querySelector('.modalControls');
   const ModalClose = LightBox.querySelector('.modalClose');
   const imgEL = LightBox.querySelector('#modalImage');
   const imgPrev = LightBox.querySelector('.modalPrev');
   const imgNext = LightBox.querySelector('.modalNext');
+  const pointer = 'sd-image-viewer-pointer-events-none';
 
   const Wrapper = document.createElement('div');
   Wrapper.id = 'modalWrapper';
   Wrapper.prepend(imgEL);
   LightBox.prepend(Wrapper);
-
-  const imgState = {
-    scale: 1,
-    offsetX: 0,
-    offsetY: 0,
-    lastX: 0,
-    lastY: 0,
-    lastLen: 1,
-    LastTouch: 0,
-    ZoomMomentum: 0,
-    MoveMomentum: 0,
-    LastZoom: 0,
-    SnapMouse: 20,
-    SnapTouch: 10,
-
-    TouchGrass: {
-      touchScale: false,
-      last1X: 0,
-      last1Y: 0,
-      last2X: 0,
-      last2Y: 0,
-      delta1X: 0,
-      delta1Y: 0,
-      delta2X: 0,
-      delta2Y: 0,
-      scale: 1
-    },
-
-    SDImageViewerSnapBack: function(imgEL, LightBox) {
-      if (this.scale <= 1) return;
-
-      const imgELW = imgEL.offsetWidth * this.scale;
-      const imgELH = imgEL.offsetHeight * this.scale;
-      const LightBoxW = LightBox.offsetWidth;
-      const LightBoxH = LightBox.offsetHeight;
-
-      if (imgELW <= LightBoxW) {
-        const EdgeY = (imgELH - LightBoxH) / 2;
-        if (this.offsetY > EdgeY) this.offsetY = EdgeY;
-        else if (this.offsetY < -EdgeY) this.offsetY = -EdgeY;
-
-        imgEL.style.transition = 'transform 0.3s ease';
-        imgEL.style.transform = `translateY(${this.offsetY}px) scale(${this.scale})`;
-
-      } else if (imgELH <= LightBoxH) {
-        const EdgeX = (imgELW - LightBoxW) / 2;
-        if (this.offsetX > EdgeX) this.offsetX = EdgeX;
-        else if (this.offsetX < -EdgeX) this.offsetX = -EdgeX;
-
-        imgEL.style.transition = 'transform 0.3s ease';
-        imgEL.style.transform = `translateX(${this.offsetX}px) scale(${this.scale})`;
-
-      } else {
-        const EdgeX = (imgELW - LightBoxW) / 2;
-        if (this.offsetX > EdgeX) this.offsetX = EdgeX;
-        else if (this.offsetX < -EdgeX) this.offsetX = -EdgeX;
-
-        const EdgeY = (imgELH - LightBoxH) / 2;
-        if (this.offsetY > EdgeY) this.offsetY = EdgeY;
-        else if (this.offsetY < -EdgeY) this.offsetY = -EdgeY;
-
-        imgEL.style.transition = 'transform 0.3s ease';
-        imgEL.style.transform = `translate(${this.offsetX}px, ${this.offsetY}px) scale(${this.scale})`;
-      }
-    },
-
-    SDImageViewerimgReset: function() {
-      this.scale = 1;
-      this.offsetX = 0;
-      this.offsetY = 0;
-      this.lastX = 0;
-      this.lastY = 0;
-
-      Object.assign(this.TouchGrass, {
-        touchScale: false,
-        last1X: 0,
-        last1Y: 0,
-        last2X: 0,
-        last2Y: 0,
-        delta1X: 0,
-        delta1Y: 0,
-        delta2X: 0,
-        delta2Y: 0,
-        scale: 1
-      });
-
-      imgEL.style.transition = '';
-      imgEL.style.transform = '';
-    },
-
-    SDImageViewerCloseZoom: function() {
-      setTimeout(() => {
-        LightBox.style.opacity = '0';
-      }, 50);
-
-      setTimeout(() => {
-        document.querySelector('body > gradio-app').style.paddingRight = '0';
-        document.body.style.overflow = '';
-        LightBox.style.display = 'none';
-        this.SDImageViewerimgReset();
-        Wrapper.style.transform = '';
-        Wrapper.style.opacity = '';
-      }, 150);
-    }
-  };
-
-  window.closeModal = imgState.SDImageViewerCloseZoom.bind(imgState);
-
-  imgEL.onload = () => {
-    imgState.SDImageViewerimgReset();
-  };
-
-  imgEL.ondrag = imgEL.ondragend = imgEL.ondragstart = (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-  };
-
-  LightBox.onkeydown = (e) => {
-    if (window.getComputedStyle(LightBox).display === 'flex' && e.key === 'Escape') {
-      e.preventDefault();
-      imgState.SDImageViewerCloseZoom();
-    }
-  };
 
   imgPrev.innerHTML = SDImageViewerPrevSVG;
   imgNext.innerHTML = SDImageViewerNextSVG;
@@ -146,8 +24,6 @@ function SDImageViewerEL() {
   downloadSpan.className = 'downloadImage cursor';
   downloadSpan.title = 'Download Image';
   downloadSpan.innerHTML = SDImageViewerDownloadSVG;
-  ModalControls.appendChild(downloadSpan);
-
   downloadSpan.onclick = (e) => {
     if (imgEL) {
       let imgUrl = encodeURI(imgEL.src);
@@ -162,33 +38,41 @@ function SDImageViewerEL() {
     e.stopPropagation();
   };
 
-  SDImageViewerMouseEvents(imgState);
-  SDImageViewerTouchEvents(imgState);
+  Control.append(downloadSpan, imgPrev, imgNext);
+
+  const imageViewer = SharedImageViewer(imgEL, LightBox, Control, Wrapper, {
+    noPointer: pointer,
+  });
+
+  window.SDImageViewerReset = imageViewer.state.reset.bind(imageViewer.state);
+
+  imageViewer.state.close = function () {
+    setTimeout(() => LightBox.style.opacity = '0', 50);
+
+    setTimeout(() => {
+      document.querySelector('body > gradio-app').style.paddingRight = '';
+      document.body.style.overflow = '';
+      LightBox.style.display = 'none';
+      window.SDImageViewerReset();
+      Wrapper.style.transform = '';
+    }, 150);
+  };
+
+  window.closeModal = imageViewer.state.close;
 }
 
 function SDImageViewerToggleNextPrevButton() {
   const imgGallery = document.querySelectorAll("div[id^='tab_'] div[id$='_results'] .thumbnail-item > img");
   const imgSrc = new Set(Array.from(imgGallery).map(imgEL => imgEL.src));
-  const imgPrev = document.querySelector('.modalPrev');
-  const imgNext = document.querySelector('.modalNext');
+
+  const lightbox = document.getElementById('lightboxModal');
+  const imgPrev = lightbox.querySelector('.modalPrev');
+  const imgNext = lightbox.querySelector('.modalNext');
 
   if (imgPrev && imgNext) {
     imgSrc.size > 1 ? 
       (imgPrev.style.display = 'flex', imgNext.style.display = 'flex') :
       (imgPrev.style.display = 'none', imgNext.style.display = 'none');
-  }
-}
-
-function SDImageViewerSwitchImage(f) {
-  const Wrapper = document.getElementById('modalWrapper');
-  const imgEL = document.getElementById('modalImage');
-
-  if (Wrapper && imgEL) {
-    Wrapper.style.transition = f === 'h' ? 'none' : '';
-    Wrapper.style.opacity = f === 'h' ? '' : '1';
-    Wrapper.style.transform = f === 'h' ? '' : 'translate(0px, 0px) scale(1)';
-    imgEL.style.transition = f === 'h' ? 'none' : '';
-    imgEL.style.transform = f === 'h' ? 'translate(0, 0) scale(1)' : '';
   }
 }
 
@@ -202,28 +86,32 @@ window.modalLivePreviewToggle = function(e) {
 window.showModal = function(e) {
   SDImageViewerToggleNextPrevButton();
 
-  const AppGradio = document.querySelector('body > gradio-app');
+  const app = document.querySelector('body > gradio-app');
   const LightBox = document.getElementById('lightboxModal');
+  const Wrapper = LightBox.querySelector('#modalWrapper');
   const source = e.target || e.srcElement;
   const imgEL = document.getElementById('modalImage');
-  const LiveToggle = document.getElementById('modal_toggle_live_preview');
 
-  LiveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? SDImageViewerLiveSVG : SDImageViewerStaticSVG;
+  const LiveToggle = document.getElementById('modal_toggle_live_preview');
+  if (LiveToggle) LiveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? SDImageViewerLiveSVG : SDImageViewerStaticSVG;
+
   imgEL.src = source.src;
   if (imgEL.style.display === 'none') LightBox.style.setProperty('background-image', 'url(' + source.src + ')');
+
+  let g = app ? app.offsetWidth : 0;
+  document.body.style.overflow = 'hidden';
 
   LightBox.style.display = 'flex';
   LightBox.focus();
 
-  let GradioWidth = AppGradio ? AppGradio.offsetWidth : 0;
-  document.body.style.overflow = 'hidden';
+  requestAnimationFrame(() => setTimeout(() => {
+    LightBox.style.opacity = '1';
+    setTimeout(() => Wrapper.style.transform = 'translate(0px, 0px) scale(1)', 50);
+  }, 50));
 
-  LightBox.style.opacity = '1';
-  SDImageViewerSwitchImage('s');
-
-  const newWidth = AppGradio.offsetWidth;
-  const widthDifference = newWidth - GradioWidth;
-  if (widthDifference > 0) AppGradio.style.paddingRight = widthDifference + 'px';
+  const n = app.offsetWidth;
+  const w = n - g;
+  if (w > 0) app.style.paddingRight = w + 'px';
   e.stopPropagation();
 }
 
@@ -238,10 +126,19 @@ window.modalImageSwitch = function(offset) {
     if (result != -1) {
       var nextButton = galleryButtons[negmod((result + offset), galleryButtons.length)];
       nextButton.click();
-      SDImageViewerSwitchImage('h');
       imgEL.src = nextButton.children[0].src;
       if (imgEL.style.display === 'none') LightBox.style.setProperty('background-image', `url(${imgEL.src})`);
-      setTimeout(() => (LightBox.focus(), SDImageViewerSwitchImage('s')), 30);
+      imgEL.style.transition = 'none';
+      imgEL.style.transform = 'translate(0px, 0px) scale(1.0001)';
+      setTimeout(() => (LightBox.focus(), window.SDImageViewerReset()), 0);
     }
   }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (/firefox/i.test(navigator.userAgent)) {
+    const bg = document.createElement('style');
+    bg.innerHTML = `#lightboxModal { backdrop-filter: none !important; }`;
+    document.body.append(bg);
+  }
+});
