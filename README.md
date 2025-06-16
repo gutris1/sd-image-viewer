@@ -9,7 +9,10 @@ and when its width/height exceeds the container's width/height<br>
 the image edges will always snap to the container's edges during dragging.<br>
 <br>
 Usage:<br>
-Use mouse wheel/pinch to zoom in and out, hold left-click/touch to drag the image<br>
+- Use mousewheel/pinch to zoom in and out.
+- Hold left-click/touch to drag the image.
+- CTRL/SHIFT + mousewheel to move the image vertically/horizontally.
+
 <br>
 <p align="center">
   <img src="https://github.com/user-attachments/assets/f2068ed6-9cd7-41d4-8d74-10e477a44d83">
