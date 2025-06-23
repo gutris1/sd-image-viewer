@@ -1,7 +1,3 @@
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelector('#lightboxModal > .modalControls') && SDImageViewer();
-});
-
 function SDImageViewer() {
   const LightBox = document.getElementById('lightboxModal');
   const Control = LightBox.querySelector('.modalControls');
@@ -41,24 +37,21 @@ function SDImageViewer() {
   Control.append(downloadSpan, imgPrev, imgNext);
 
   const imageViewer = SharedImageViewer(imgEL, LightBox, Control, Wrapper, {
-    noPointer: pointer,
+    noPointer: pointer, persist: true
   });
 
   window.SDImageViewerReset = imageViewer.state.reset.bind(imageViewer.state);
 
   imageViewer.state.close = function () {
-    setTimeout(() => LightBox.style.opacity = '0', 50);
-
-    setTimeout(() => {
-      document.querySelector('body > gradio-app').style.paddingRight = '';
-      document.body.style.overflow = '';
+    requestAnimationFrame(() => {
       LightBox.style.display = 'none';
-      window.SDImageViewerReset();
-      Wrapper.style.transform = '';
-    }, 150);
+      document.querySelector('body > gradio-app').style.paddingRight = '';
+      document.body.style.overflow = LightBox.style.opacity = Wrapper.style.transform = '';
+    });
   };
 
   window.closeModal = imageViewer.state.close;
+  ModalClose.onclick = window.closeModal;
 }
 
 function SDImageViewerToggleNextPrevButton() {
@@ -70,9 +63,9 @@ function SDImageViewerToggleNextPrevButton() {
   const imgNext = lightbox.querySelector('.modalNext');
 
   if (imgPrev && imgNext) {
-    imgSrc.size > 1 ? 
-      (imgPrev.style.display = 'flex', imgNext.style.display = 'flex') :
-      (imgPrev.style.display = 'none', imgNext.style.display = 'none');
+    imgSrc.size > 1
+      ? (imgPrev.style.display = 'flex', imgNext.style.display = 'flex')
+      : (imgPrev.style.display = 'none', imgNext.style.display = 'none');
   }
 }
 
@@ -107,6 +100,7 @@ window.showModal = function(e) {
   requestAnimationFrame(() => setTimeout(() => {
     LightBox.style.opacity = '1';
     setTimeout(() => Wrapper.style.transform = 'translate(0px, 0px) scale(1)', 50);
+    setTimeout(() => window.SDImageViewerReset(), 0);
   }, 50));
 
   const n = app.offsetWidth;
@@ -136,6 +130,8 @@ window.modalImageSwitch = function(offset) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  document.querySelector('#lightboxModal > .modalControls') && SDImageViewer();
+
   if (/firefox/i.test(navigator.userAgent)) {
     const bg = document.createElement('style');
     bg.innerHTML = `#lightboxModal { backdrop-filter: none !important; }`;
