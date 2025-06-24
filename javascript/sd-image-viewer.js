@@ -40,18 +40,21 @@ function SDImageViewer() {
     noPointer: pointer, persist: true
   });
 
-  window.SDImageViewerReset = imageViewer.state.reset.bind(imageViewer.state);
-
   imageViewer.state.close = function () {
-    requestAnimationFrame(() => {
+    LightBox.style.opacity = '';
+    requestAnimationFrame(() => setTimeout(() => {
       LightBox.style.display = 'none';
       document.querySelector('body > gradio-app').style.paddingRight = '';
-      document.body.style.overflow = LightBox.style.opacity = Wrapper.style.transform = '';
-    });
+      document.body.style.overflow = Wrapper.style.transform = '';
+      window.SDImageViewerReset();
+    }, 100));
   };
 
   window.closeModal = imageViewer.state.close;
-  ModalClose.onclick = window.closeModal;
+  ModalClose.onclick = () => window.closeModal;
+
+  window.SDImageViewerReset = imageViewer.state.reset.bind(imageViewer.state);
+  imgEL.onload = () => (imgEL.style.transition = '', window.SDImageViewerReset());
 }
 
 function SDImageViewerToggleNextPrevButton() {
@@ -100,7 +103,6 @@ window.showModal = function(e) {
   requestAnimationFrame(() => setTimeout(() => {
     LightBox.style.opacity = '1';
     setTimeout(() => Wrapper.style.transform = 'translate(0px, 0px) scale(1)', 50);
-    setTimeout(() => window.SDImageViewerReset(), 0);
   }, 50));
 
   const n = app.offsetWidth;
@@ -121,10 +123,9 @@ window.modalImageSwitch = function(offset) {
       var nextButton = galleryButtons[negmod((result + offset), galleryButtons.length)];
       nextButton.click();
       imgEL.src = nextButton.children[0].src;
+      imgEL.style.transition = imgEL.style.transform = '';
       if (imgEL.style.display === 'none') LightBox.style.setProperty('background-image', `url(${imgEL.src})`);
-      imgEL.style.transition = 'none';
-      imgEL.style.transform = 'translate(0px, 0px) scale(1.0001)';
-      setTimeout(() => (LightBox.focus(), window.SDImageViewerReset()), 0);
+      LightBox.focus();
     }
   }
 }
