@@ -1,13 +1,12 @@
 function SDImageViewer() {
-  const LightBox = document.getElementById('lightboxModal');
-  const Control = LightBox.querySelector('.modalControls');
-  const ModalClose = LightBox.querySelector('.modalClose');
-  const imgEL = LightBox.querySelector('#modalImage');
-  const imgPrev = LightBox.querySelector('.modalPrev');
-  const imgNext = LightBox.querySelector('.modalNext');
-  const pointer = 'sd-image-viewer-pointer-events-none';
+  const LightBox = document.getElementById('lightboxModal'),
+  Control = LightBox.querySelector('.modalControls'),
+  ModalClose = LightBox.querySelector('.modalClose'),
+  imgEL = LightBox.querySelector('#modalImage'),
+  imgPrev = LightBox.querySelector('.modalPrev'),
+  imgNext = LightBox.querySelector('.modalNext'),
 
-  const Wrapper = document.createElement('div');
+  Wrapper = document.createElement('div');
   Wrapper.id = 'modalWrapper';
   Wrapper.prepend(imgEL);
   LightBox.prepend(Wrapper);
@@ -16,38 +15,42 @@ function SDImageViewer() {
   imgNext.innerHTML = SDImageViewerNextSVG;
   ModalClose.innerHTML = SDImageViewerCloseSVG;
 
-  const downloadSpan = document.createElement('span');
-  downloadSpan.className = 'downloadImage cursor';
-  downloadSpan.title = 'Download Image';
-  downloadSpan.innerHTML = SDImageViewerDownloadSVG;
-  downloadSpan.onclick = (e) => {
+  const downloadBtn = document.createElement('span');
+  downloadBtn.className = 'downloadImage cursor';
+  downloadBtn.title = 'Download Image';
+  downloadBtn.innerHTML = SDImageViewerDownloadSVG;
+  downloadBtn.onclick = (e) => {
     if (imgEL) {
-      let imgUrl = encodeURI(imgEL.src);
-      const filename = imgUrl.split('/').pop().split('?')[0];
-      const downloadLink = document.createElement('a');
-      downloadLink.href = imgUrl;
-      downloadLink.download = filename;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      const url = encodeURI(imgEL.src),
+      name = url.split('/').pop().split('?')[0],
+      link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
     e.stopPropagation();
   };
 
-  Control.append(downloadSpan, imgPrev, imgNext);
+  Control.append(downloadBtn, imgPrev, imgNext);
 
-  const imageViewer = SharedImageViewer(imgEL, LightBox, Control, Wrapper, {
-    noPointer: pointer, persist: true
+  const imageViewer = SharedImageViewer(imgEL, LightBox, {
+    persist: true,
+    zoomStart: () => Control.classList.add('hide'),
+    zoomEnd: () => Control.classList.remove('hide')
   });
 
   imageViewer.state.close = function () {
-    LightBox.style.opacity = '';
-    requestAnimationFrame(() => setTimeout(() => {
-      LightBox.style.display = 'none';
+    LightBox.classList.remove('display');
+
+    setTimeout(() => {
+      LightBox.style.display = '';
       document.querySelector('body > gradio-app').style.paddingRight = '';
-      document.body.style.overflow = Wrapper.style.transform = '';
+      document.body.style.overflow = '';
+      Wrapper.classList.remove('display');
       window.SDImageViewerReset();
-    }, 100));
+    }, 200);
   };
 
   window.closeModal = imageViewer.state.close;
@@ -58,17 +61,16 @@ function SDImageViewer() {
 }
 
 function SDImageViewerToggleNextPrevButton() {
-  const imgGallery = document.querySelectorAll("div[id^='tab_'] div[id$='_results'] .thumbnail-item > img");
-  const imgSrc = new Set(Array.from(imgGallery).map(imgEL => imgEL.src));
-
-  const lightbox = document.getElementById('lightboxModal');
-  const imgPrev = lightbox.querySelector('.modalPrev');
-  const imgNext = lightbox.querySelector('.modalNext');
+  const imgGallery = document.querySelectorAll("div[id^='tab_'] div[id$='_results'] .thumbnail-item > img"),
+  imgSrc = new Set(Array.from(imgGallery).map(imgEL => imgEL.src)),
+  lightbox = document.getElementById('lightboxModal'),
+  imgPrev = lightbox.querySelector('.modalPrev'),
+  imgNext = lightbox.querySelector('.modalNext');
 
   if (imgPrev && imgNext) {
     imgSrc.size > 1
-      ? (imgPrev.style.display = 'flex', imgNext.style.display = 'flex')
-      : (imgPrev.style.display = 'none', imgNext.style.display = 'none');
+      ? (imgPrev.style.display = imgNext.style.display = 'flex')
+      : (imgPrev.style.display = imgNext.style.display = 'none');
   }
 }
 
@@ -82,13 +84,13 @@ window.modalLivePreviewToggle = function(e) {
 window.showModal = function(e) {
   SDImageViewerToggleNextPrevButton();
 
-  const app = document.querySelector('body > gradio-app');
-  const LightBox = document.getElementById('lightboxModal');
-  const Wrapper = LightBox.querySelector('#modalWrapper');
-  const source = e.target || e.srcElement;
-  const imgEL = document.getElementById('modalImage');
+  const app = document.querySelector('body > gradio-app'),
+  LightBox = document.getElementById('lightboxModal'),
+  Wrapper = LightBox.querySelector('#modalWrapper'),
+  source = e.target || e.srcElement,
+  imgEL = document.getElementById('modalImage'),
 
-  const LiveToggle = document.getElementById('modal_toggle_live_preview');
+  LiveToggle = document.getElementById('modal_toggle_live_preview');
   if (LiveToggle) LiveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? SDImageViewerLiveSVG : SDImageViewerStaticSVG;
 
   imgEL.src = source.src;
@@ -100,27 +102,26 @@ window.showModal = function(e) {
   LightBox.style.display = 'flex';
   LightBox.focus();
 
-  requestAnimationFrame(() => setTimeout(() => {
-    LightBox.style.opacity = '1';
-    setTimeout(() => Wrapper.style.transform = 'translate(0px, 0px) scale(1)', 50);
-  }, 50));
+  setTimeout(() => requestAnimationFrame(() => {
+    LightBox.classList.add('display');
+    setTimeout(() => Wrapper.classList.add('display'), 50);
+  }), 100);
 
-  const n = app.offsetWidth;
-  const w = n - g;
+  const n = app.offsetWidth, w = n - g;
   if (w > 0) app.style.paddingRight = w + 'px';
   e.stopPropagation();
 }
 
 window.modalImageSwitch = function(offset) {
-  const LightBox = document.getElementById('lightboxModal');
-  const imgEL = document.getElementById('modalImage');
-  var galleryButtons = all_gallery_buttons();
+  const LightBox = document.getElementById('lightboxModal'),
+  imgEL = LightBox.querySelector('#modalImage'),
+  galleryButtons = all_gallery_buttons();
 
   if (galleryButtons.length > 1) {
-    var result = selected_gallery_index();
+    const result = selected_gallery_index();
 
     if (result != -1) {
-      var nextButton = galleryButtons[negmod((result + offset), galleryButtons.length)];
+      const nextButton = galleryButtons[negmod((result + offset), galleryButtons.length)];
       nextButton.click();
       imgEL.src = nextButton.children[0].src;
       imgEL.style.transition = imgEL.style.transform = '';
@@ -130,12 +131,18 @@ window.modalImageSwitch = function(offset) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+onUiLoaded(() => {
   document.querySelector('#lightboxModal > .modalControls') && SDImageViewer();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const css = `
+    #lightboxModal {
+      backdrop-filter: none !important;
+    }
+  `;
 
   if (/firefox/i.test(navigator.userAgent)) {
-    const bg = document.createElement('style');
-    bg.innerHTML = `#lightboxModal { backdrop-filter: none !important; }`;
-    document.body.append(bg);
+    document.body.append(Object.assign(document.createElement('style'), { innerHTML: css }));
   }
 });

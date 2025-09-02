@@ -1,9 +1,14 @@
 #lightboxModal {
+  display: none;
   overflow: hidden;
   backdrop-filter: blur(10px);
   background-color: rgba(0, 0, 0, 0.8);
   opacity: 0;
-  transition: opacity .3s ease;
+  transition: opacity .2s ease;
+}
+
+#lightboxModal.display {
+  opacity: 1;
 }
 
 #modalWrapper {
@@ -13,8 +18,12 @@
   justify-content: center;
   height: 100%;
   width: 100%;
-  transform: translate(0px, 0px) scale(0.7);
+  transform: translate(0px, 0px) scale(1.2);
   transition: transform .2s ease-out;
+}
+
+#modalWrapper.display {
+  transform: translate(0px, 0px) scale(1);
 }
 
 #modalImage {
@@ -28,9 +37,6 @@
   user-select: none;
   background-color: var(--input-background-fill);
   transform: translate(0px, 0px) scale(1.0001);
-}
-
-#modalImage:focus {
   outline: none;
 }
 
@@ -44,7 +50,7 @@
   transition: opacity 0.3s ease;
 }
 
-#lightboxModal > .modalControls.sd-image-viewer-pointer-events-none * {
+#lightboxModal > .modalControls.hide * {
   opacity: 0 !important;
   pointer-events: none !important;
 }
