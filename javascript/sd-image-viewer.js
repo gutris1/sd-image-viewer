@@ -50,6 +50,7 @@ function SDImageViewer() {
       document.body.style.overflow = '';
       Wrapper.classList.remove('display');
       window.SDImageViewerReset();
+      imgEL.style.transition = imgEL.style.transform = '';
     }, 200);
   };
 
