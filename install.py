@@ -1,9 +1,11 @@
-from modules.paths_internal import extensions_dir
 from pathlib import Path
-import subprocess
 
-def _Req():
-    scr = Path(extensions_dir) / 'sd-image-scripts'
-    if not scr.exists(): subprocess.run(['git', 'clone', '-q', 'https://github.com/gutris1/sd-image-scripts', str(scr)], check=True)
+from modules.paths_internal import extensions_dir
+from modules.launch_utils import git_clone
 
-_Req()
+def req():
+    n = 'sd-image-scripts'
+    p = Path(extensions_dir) / n
+    if not p.exists(): git_clone(f'https://github.com/gutris1/{n}', str(p), n)
+
+req()
