@@ -1,147 +1,196 @@
-onUiLoaded(() => {
-  const LightBox = document.getElementById('lightboxModal'),
-  Control = LightBox.querySelector('.modalControls');
+function SDImageViewer() {
+  const lightBox = document.getElementById('lightboxModal'),
+  controls = lightBox.querySelector('.modalControls'),
+  closeBtn = lightBox.querySelector('.modalClose'),
+  img = lightBox.querySelector('#modalImage'),
+  prevBtn = lightBox.querySelector('.modalPrev'),
+  nextBtn = lightBox.querySelector('.modalNext'),
 
-  if (Control) {
-    const ModalClose = LightBox.querySelector('.modalClose'),
-    imgEL = LightBox.querySelector('#modalImage'),
-    imgPrev = LightBox.querySelector('.modalPrev'),
-    imgNext = LightBox.querySelector('.modalNext'),
+  imgWrapper = document.createElement('div');
+  imgWrapper.id = 'modalWrapper';
+  imgWrapper.prepend(img);
+  lightBox.prepend(imgWrapper);
 
-    Wrapper = document.createElement('div');
-    Wrapper.id = 'modalWrapper';
-    Wrapper.prepend(imgEL);
-    LightBox.prepend(Wrapper);
+  [lightBox, img, prevBtn, nextBtn].forEach(el => el.removeEventListener('keydown', modalKeyHandler, true));
+  [img, prevBtn, nextBtn].forEach(el => el.removeAttribute('tabindex'));
 
-    imgPrev.innerHTML = SDImageViewer.prev();
-    imgNext.innerHTML = SDImageViewer.next();
-    ModalClose.innerHTML = SDImageViewer.close();
+  prevBtn.removeEventListener('click', modalPrevImage, true);
+  nextBtn.removeEventListener('click', modalNextImage, true);
 
-    const downloadBtn = document.createElement('span');
-    downloadBtn.className = 'downloadImage cursor';
-    downloadBtn.title = 'Download Image';
-    downloadBtn.innerHTML = SDImageViewer.download();
-    downloadBtn.onclick = (e) => {
-      if (imgEL) {
-        const url = encodeURI(imgEL.src),
-        name = url.split('/').pop().split('?')[0],
-        link = document.createElement('a');
-        link.href = url;
-        link.download = name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-      e.stopPropagation();
-    };
+  prevBtn.innerHTML = SDImageViewerVar.prev();
+  nextBtn.innerHTML = SDImageViewerVar.next();
+  closeBtn.innerHTML = SDImageViewerVar.close();
 
-    Control.append(downloadBtn, imgPrev, imgNext);
+  const downloadBtn = document.createElement('span');
+  downloadBtn.className = 'downloadImage cursor';
+  downloadBtn.title = 'Download Image';
+  downloadBtn.innerHTML = SDImageViewerVar.download();
+  downloadBtn.onclick = (e) => {
+    if (img) {
+      const url = encodeURI(img.src),
+      name = url.split('/').pop().split('?')[0],
+      link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    e.stopPropagation();
+  };
 
-    const imageViewer = SharedImageViewer(imgEL, LightBox, {
-      persist: true,
-      zoomStart: () => Control.classList.add('hide'),
-      zoomEnd: () => Control.classList.remove('hide')
-    });
+  controls.append(downloadBtn, prevBtn, nextBtn);
+  lightBox.onkeydown = closeBtn.onclick = null;
 
-    imageViewer.state.close = function () {
-      LightBox.classList.remove('display');
+  lightBox._click = () => {};
+  lightBox.onclick = (e) => lightBox._click(e);
 
-      setTimeout(() => {
-        LightBox.style.display = '';
-        document.querySelector('body > gradio-app').style.paddingRight = '';
-        document.body.style.overflow = '';
-        Wrapper.classList.remove('display');
-        window.SDImageViewerReset();
-        imgEL.style.transition = imgEL.style.transform = '';
-      }, 200);
-    };
+  const viewer = SharedImageViewer(img, lightBox, {
+    persist: true,
+    dragStart: () => controls.classList.add('hide'),
+    dragEnd: () => controls.classList.remove('hide')
+  });
 
-    window.closeModal = imageViewer.state.close;
-    ModalClose.onclick = () => window.closeModal;
+  viewer.state.close = function () {
+    lightBox.classList.remove('display');
 
-    window.SDImageViewerReset = imageViewer.state.reset.bind(imageViewer.state);
-    imgEL.onload = () => (imgEL.style.transition = '', window.SDImageViewerReset());
-  }
-});
+    setTimeout(() => {
+      lightBox.style.display = '';
+      lightBox._click = null;
+      lightBox.onkeydown = closeBtn.onclick = null;
+      gradioApp().style.paddingRight = document.body.style.overflow = '';
+      imgWrapper.classList.remove('display');
+      window.SDImageViewerReset();
+      img.removeAttribute('style');
+    }, 200);
+  };
 
-function SDImageViewerNextPrevButton() {
+  window.closeModal = viewer.state.close;
+  window.SDImageViewerReset = viewer.state.reset.bind(viewer.state);
+
+  img.onload = () => {
+    img.style.transform = '';
+    window.SDImageViewerReset();
+  };
+
+  prevBtn.onclick = (e) => (window.modalImageSwitch(-1), e.stopPropagation());
+  nextBtn.onclick = (e) => (window.modalImageSwitch(1), e.stopPropagation());
+
+  uiAfterUpdateCallbacks = uiAfterUpdateCallbacks.filter(cb => {
+    return !cb.toString().includes('fullImg_preview');
+  });
+
+  uiAfterUpdateCallbacks.push(() => {
+    const newImgs = gradioApp().querySelectorAll('.gradio-gallery > div > img:not([data-modded])');
+    newImgs.forEach(img => window.setupImageForLightbox(img));
+    updateOnBackgroundChange();
+  });
+}
+
+function SDImageViewerToggleNextPrev() {
   const imgGallery = document.querySelectorAll("div[id^='tab_'] div[id$='_results'] .thumbnail-item > img"),
-  imgSrc = new Set(Array.from(imgGallery).map(imgEL => imgEL.src)),
-  lightbox = document.getElementById('lightboxModal'),
-  imgPrev = lightbox.querySelector('.modalPrev'),
-  imgNext = lightbox.querySelector('.modalNext');
+  imgSrc = new Set(Array.from(imgGallery).map(img => img.src)),
+  prevBtn = document.querySelector('#lightboxModal .modalPrev'),
+  nextBtn = document.querySelector('#lightboxModal .modalNext');
 
-  if (imgPrev && imgNext) {
+  if (prevBtn && nextBtn) {
     imgSrc.size > 1
-      ? (imgPrev.style.display = imgNext.style.display = 'flex')
-      : (imgPrev.style.display = imgNext.style.display = 'none');
+      ? (prevBtn.style.display = nextBtn.style.display = 'flex')
+      : (prevBtn.style.display = nextBtn.style.display = 'none');
   }
 }
+
+const defaultUpdatebg = window.updateOnBackgroundChange;
+window.updateOnBackgroundChange = function (...args) {
+  defaultUpdatebg?.apply(this, args);
+  SDImageViewerToggleNextPrev();
+};
 
 window.modalLivePreviewToggle = function(e) {
-  const LiveToggle = gradioApp().getElementById('modal_toggle_live_preview');
   opts.js_live_preview_in_modal_lightbox = !opts.js_live_preview_in_modal_lightbox;
-  LiveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? SDImageViewer.live() : SDImageViewer.static();
-  e.stopPropagation();
-}
-
-window.showModal = function(e) {
-  SDImageViewerNextPrevButton();
-
-  const app = document.querySelector('body > gradio-app'),
-  LightBox = document.getElementById('lightboxModal'),
-  Wrapper = LightBox.querySelector('#modalWrapper'),
-  source = e.target || e.srcElement,
-  imgEL = document.getElementById('modalImage'),
-
-  LiveToggle = document.getElementById('modal_toggle_live_preview');
-  if (LiveToggle) LiveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? SDImageViewer.live() : SDImageViewer.static();
-
-  imgEL.src = source.src;
-  if (imgEL.style.display === 'none') LightBox.style.setProperty('background-image', 'url(' + source.src + ')');
-
-  let g = app ? app.offsetWidth : 0;
-  document.body.style.overflow = 'hidden';
-
-  LightBox.style.display = 'flex';
-  LightBox.focus();
-
-  setTimeout(() => requestAnimationFrame(() => {
-    LightBox.classList.add('display');
-    setTimeout(() => Wrapper.classList.add('display'), 50);
-  }), 100);
-
-  const n = app.offsetWidth, w = n - g;
-  if (w > 0) app.style.paddingRight = w + 'px';
-  e.stopPropagation();
+  const liveToggle = document.getElementById('modal_toggle_live_preview');
+  liveToggle && (liveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? SDImageViewerVar.live() : SDImageViewerVar.static());
+  e && e.stopPropagation();
 }
 
 window.modalImageSwitch = function(offset) {
-  const LightBox = document.getElementById('lightboxModal'),
-  imgEL = LightBox.querySelector('#modalImage'),
-  galleryButtons = all_gallery_buttons();
+  let galleryButtons = all_gallery_buttons();
 
   if (galleryButtons.length > 1) {
-    const result = selected_gallery_index();
+    let result = selected_gallery_index();
 
     if (result != -1) {
-      const nextButton = galleryButtons[negmod((result + offset), galleryButtons.length)];
+      let nextButton = galleryButtons[negmod((result + offset), galleryButtons.length)];
       nextButton.click();
-      imgEL.src = nextButton.children[0].src;
-      imgEL.style.transition = imgEL.style.transform = '';
-      if (imgEL.style.display === 'none') LightBox.style.setProperty('background-image', `url(${imgEL.src})`);
-      LightBox.focus();
+
+      window.SDImageViewerReset();
+      const lightBox = document.getElementById('lightboxModal'),
+      img = lightBox.querySelector('#modalImage');
+      img.style.transition = 'none';
+      img.style.transform = '';
+      img.src = nextButton.children[0].src;
+
+      if (img.style.display === 'none') lightBox.style.setProperty('background-image', `url(${img.src})`);
+      setTimeout(() => lightBox.focus(), 10);
     }
   }
 }
 
+window.showModal = function(e) {
+  SDImageViewerToggleNextPrev();
+  window.modalLivePreviewToggle();
+
+  const lightBox = document.getElementById('lightboxModal'),
+  closeBtn = lightBox.querySelector('.modalClose'),
+  imgWrapper = lightBox.querySelector('#modalWrapper'),
+  img = lightBox.querySelector('#modalImage'),
+  imgSrc = e.target || e.srcElement;
+
+  img.src = imgSrc.src;
+  if (img.style.display === 'none') lightBox.style.setProperty('background-image', 'url(' + imgSrc.src + ')');
+
+  let g = gradioApp().offsetWidth;
+  document.body.style.overflow = 'hidden';
+  lightBox.style.display = 'flex';
+  lightBox.focus();
+
+  setTimeout(() => requestAnimationFrame(() => {
+    lightBox.classList.add('display');
+    setTimeout(() => imgWrapper.classList.add('display'), 50);
+  }), 100);
+
+  setTimeout(() => {
+    lightBox._click = () => window.closeModal();
+    closeBtn.onclick = () => window.closeModal();
+
+    lightBox.onkeydown = (e) => {
+      switch (e.key) {
+        case 'Escape': window.closeModal(); break;
+        case 'ArrowRight': window.modalImageSwitch(1); e.stopPropagation(); break;
+        case 'ArrowLeft': window.modalImageSwitch(-1); e.stopPropagation(); break;
+        case 's': lightBox.querySelector('.modalControls > .downloadImage').click(); e.stopPropagation(); break;
+      }
+    };
+  }, 500);
+
+  const n = gradioApp().offsetWidth, w = n - g;
+  if (w > 0) gradioApp().style.paddingRight = w + 'px';
+  e.stopPropagation();
+}
+
+onUiLoaded(() => {
+  if (document.querySelector('#lightboxModal > .modalControls')) SDImageViewer()
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   if (/firefox/i.test(navigator.userAgent)) {
-    document.body.append(Object.assign(document.createElement('style'), { textContent: SDImageViewer.css() }));
+    document.body.append(Object.assign(
+      document.createElement('style'), { textContent: SDImageViewerVar.css() }
+    ));
   }
 });
 
-const SDImageViewer = {
+const SDImageViewerVar = {
 css: () => `
 #lightboxModal {
   backdrop-filter: none !important;
@@ -194,13 +243,12 @@ next: () => `
 `,
 
 close: () => `
-<svg xmlns='http://www.w3.org/2000/svg' fill='currentColor' width='32px' height='32px' viewBox='0 0 512 512'>
-<path fill='currentColor' d='M330.443 256l136.765-136.765c14.058-14.058 14.058-36.85
-0-50.908l-23.535-23.535c-14.058-14.058-36.85-14.058-50.908 0L256 181.557L119.235
-44.792c-14.058-14.058-36.85-14.058-50.908 0L44.792 68.327c-14.058 14.058-14.058
-36.85 0 50.908L181.557 256L44.792 392.765c-14.058 14.058-14.058 36.85 0 50.908l23.535
-23.535c14.058 14.058 36.85 14.058 50.908 0L256 330.443l136.765 136.765c14.058 14.058
-36.85 14.058 50.908 0l23.535-23.535c14.058-14.058 14.058-36.85 0-50.908L330.443 256z'/>
+<svg width='100%' height='100%' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xml:space='preserve'
+stroke='currentColor' style='fill-rule: evenodd; clip-rule: evenodd; stroke-linecap: round; stroke-linejoin: round;'>
+<g transform='matrix(1.14096,-0.140958,-0.140958,1.14096,-0.0559523,0.0559523)'>
+<path d='M18,6L6.087,17.913' style='fill: none; fill-rule: nonzero; stroke-width: 5px;'/>
+</g>
+<path d='M4.364,4.364L19.636,19.636' style='fill: none; fill-rule: nonzero; stroke-width: 5px;'/>
 </svg>
 `,
 }
