@@ -1,22 +1,23 @@
 :root {
-  --sdimgviewer-background: rgb(200 200 200 / 80%);
+  --sdimgviewer-background: rgb(200 200 200 / 90%);
 }
 
 .dark {
-  --sdimgviewer-background: rgb(0 0 0 / 80%);
+  --sdimgviewer-background: rgb(0 0 0 / 90%);
 }
 
 #lightboxModal {
   display: none;
-  background-color: var(--sdimgviewer-background);
   opacity: 0;
-  backdrop-filter: blur(6px);
+  background: var(--sdimgviewer-background) var(--sd-image-scripts-noise);
+  background-repeat: repeat;
   transition: opacity .2s ease;
   overflow: hidden;
 }
 
 #lightboxModal.display {
   opacity: 1;
+  transition: opacity .25s ease;
 }
 
 #modalWrapper {
