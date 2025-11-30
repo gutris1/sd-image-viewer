@@ -45,7 +45,7 @@ function SDImageViewer() {
   lightBox._click = () => {};
   lightBox.onclick = (e) => lightBox._click(e);
 
-  const viewer = SharedImageViewer(img, lightBox, {
+  const viewer = new SDImageScriptsViewer(img, lightBox, controls, {
     persist: true,
     dragStart: () => controls.classList.add('hide'),
     dragEnd: () => controls.classList.remove('hide')
@@ -66,7 +66,7 @@ function SDImageViewer() {
   };
 
   window.closeModal = viewer.state.close;
-  window.SDImageViewerReset = viewer.state.reset.bind(viewer.state);
+  window.SDImageViewerReset = viewer.reset.bind(viewer);
 
   img.onload = () => {
     img.style.transform = '';
@@ -75,16 +75,6 @@ function SDImageViewer() {
 
   prevBtn.onclick = (e) => (window.modalImageSwitch(-1), e.stopPropagation());
   nextBtn.onclick = (e) => (window.modalImageSwitch(1), e.stopPropagation());
-
-  uiAfterUpdateCallbacks = uiAfterUpdateCallbacks.filter(cb => {
-    return !cb.toString().includes('fullImg_preview');
-  });
-
-  uiAfterUpdateCallbacks.push(() => {
-    const newImgs = gradioApp().querySelectorAll('.gradio-gallery > div > img:not([data-modded])');
-    newImgs.forEach(img => window.setupImageForLightbox(img));
-    updateOnBackgroundChange();
-  });
 }
 
 function SDImageViewerToggleNextPrev() {
@@ -99,12 +89,6 @@ function SDImageViewerToggleNextPrev() {
       : (prevBtn.style.display = nextBtn.style.display = 'none');
   }
 }
-
-const defaultUpdatebg = window.updateOnBackgroundChange;
-window.updateOnBackgroundChange = function (...args) {
-  defaultUpdatebg?.apply(this, args);
-  SDImageViewerToggleNextPrev();
-};
 
 window.modalLivePreviewToggle = function(e) {
   opts.js_live_preview_in_modal_lightbox = !opts.js_live_preview_in_modal_lightbox;
@@ -151,6 +135,7 @@ window.showModal = function(e) {
 
   let g = gradioApp().offsetWidth;
   document.body.style.overflow = 'hidden';
+
   lightBox.style.display = 'flex';
   lightBox.focus();
 
@@ -160,7 +145,7 @@ window.showModal = function(e) {
   }), 100);
 
   setTimeout(() => {
-    lightBox._click = () => window.closeModal();
+    lightBox._click = (e) => { if (e.target === lightBox) window.closeModal(); };
     closeBtn.onclick = () => window.closeModal();
 
     lightBox.onkeydown = (e) => {
