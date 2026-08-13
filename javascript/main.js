@@ -1,3 +1,5 @@
+let SDImageViewerTimeout;
+
 function SDImageViewer() {
   const lightBox = document.getElementById('lightboxModal'),
   controls = lightBox.querySelector('.modalControls'),
@@ -51,21 +53,22 @@ function SDImageViewer() {
     dragEnd: () => controls.classList.remove('hide')
   });
 
-  viewer.state.close = function () {
-    lightBox.classList.remove('display');
+  viewer.close = function () {
+    clearTimeout(SDImageViewerTimeout);
+    SDImageViewerTimeout = null;
+
+    lightBox.className = '';
+    setTimeout(() => gradioApp().style.paddingRight = document.body.style.overflow = '', 50);
 
     setTimeout(() => {
-      lightBox.style.display = '';
-      lightBox._click = null;
-      lightBox.onkeydown = closeBtn.onclick = null;
-      gradioApp().style.paddingRight = document.body.style.overflow = '';
-      imgWrapper.classList.remove('display');
+      lightBox.style.display = imgWrapper.className = '';
+      lightBox._click = lightBox.onmousedown = lightBox.onkeydown = closeBtn.onclick = null;
       window.SDImageViewerReset();
       img.removeAttribute('style');
-    }, 200);
+    }, 150);
   };
 
-  window.closeModal = viewer.state.close;
+  window.closeModal = viewer.close
   window.SDImageViewerReset = viewer.reset.bind(viewer);
 
   img.onload = () => {
@@ -90,12 +93,16 @@ function SDImageViewerToggleNextPrev() {
   }
 }
 
-window.modalLivePreviewToggle = function(e) {
-  opts.js_live_preview_in_modal_lightbox = !opts.js_live_preview_in_modal_lightbox;
+function SDImageViewerLivePreview() {
   const liveToggle = document.getElementById('modal_toggle_live_preview');
   liveToggle && (liveToggle.innerHTML = opts.js_live_preview_in_modal_lightbox ? SDImageViewerVar.live() : SDImageViewerVar.static());
-  e && e.stopPropagation();
 }
+
+window.modalLivePreviewToggle = function(e) {
+  opts.js_live_preview_in_modal_lightbox = !opts.js_live_preview_in_modal_lightbox;
+  SDImageViewerLivePreview();
+  e && e.stopPropagation();
+};
 
 window.modalImageSwitch = function(offset) {
   let galleryButtons = all_gallery_buttons();
@@ -122,7 +129,7 @@ window.modalImageSwitch = function(offset) {
 
 window.showModal = function(e) {
   SDImageViewerToggleNextPrev();
-  window.modalLivePreviewToggle();
+  SDImageViewerLivePreview();
 
   const lightBox = document.getElementById('lightboxModal'),
   closeBtn = lightBox.querySelector('.modalClose'),
@@ -139,24 +146,21 @@ window.showModal = function(e) {
   lightBox.style.display = 'flex';
   lightBox.focus();
 
-  setTimeout(() => requestAnimationFrame(() => {
-    lightBox.classList.add('display');
-    setTimeout(() => imgWrapper.classList.add('display'), 50);
-  }), 100);
+  setTimeout(() => requestAnimationFrame(() => lightBox.className = imgWrapper.className = 'display'), 100);
+  clearTimeout(SDImageViewerTimeout);
 
-  setTimeout(() => {
-    lightBox._click = (e) => { if (e.target === lightBox) window.closeModal(); };
+  SDImageViewerTimeout = setTimeout(() => {
+    lightBox._click = e => e.target === lightBox && window.closeModal();
     closeBtn.onclick = () => window.closeModal();
-
     lightBox.onkeydown = (e) => {
       switch (e.key) {
-        case 'Escape': window.closeModal(); break;
-        case 'ArrowRight': window.modalImageSwitch(1); e.stopPropagation(); break;
-        case 'ArrowLeft': window.modalImageSwitch(-1); e.stopPropagation(); break;
-        case 's': lightBox.querySelector('.modalControls > .downloadImage').click(); e.stopPropagation(); break;
+        case 'Escape': e.preventDefault(), e.stopPropagation(), window.closeModal(); break;
+        case 'ArrowRight': window.modalImageSwitch(1), e.stopPropagation(); break;
+        case 'ArrowLeft': window.modalImageSwitch(-1), e.stopPropagation(); break;
+        case 's': lightBox.querySelector('.modalControls > .downloadImage').click(), e.stopPropagation(); break;
       }
     };
-  }, 500);
+  }, 150);
 
   const n = gradioApp().offsetWidth, w = n - g;
   if (w > 0) gradioApp().style.paddingRight = w + 'px';
@@ -167,21 +171,7 @@ onUiLoaded(() => {
   if (document.querySelector('#lightboxModal > .modalControls')) SDImageViewer()
 });
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (/firefox/i.test(navigator.userAgent)) {
-    document.body.append(Object.assign(
-      document.createElement('style'), { textContent: SDImageViewerVar.css() }
-    ));
-  }
-});
-
 const SDImageViewerVar = {
-css: () => `
-#lightboxModal {
-  backdrop-filter: none !important;
-}
-`,
-
 static: () => `
 <svg xmlns='http://www.w3.org/2000/svg' width='30px' height='30px' viewBox='0 0 24 24' fill='transparent'
 stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'>
@@ -216,24 +206,26 @@ l-1.41-1.41L17 20.17V2h-2v18.17l-7.59-7.58L6 14l10 10l10-10z'/>
 `,
 
 prev: () => `
-<svg xmlns='http://www.w3.org/2000/svg' fill='currentColor' width='32px' height='32px' viewBox='0 0 24 24'>
-<path d='m4.431 12.822 13 9A1 1 0 0 0 19 21V3a1 1 0 0 0-1.569-.823l-13 9a1.003 1.003 0 0 0 0 1.645z'/>
+<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+width="32px" height="32px" viewBox="0 0 30 45">
+<path d="M 27.23 40.814 C 27.211 42.672 24.948 43.677 23.55 42.479 L 3.815 25.042 C 2.442 23.51 2.396 21.578 3.829 20.109 L 23.55 2.688 C 25.291 1.221 27.247 2.26 27.23 4.352 L 27.23 40.814 Z"/>
 </svg>
 `,
 
 next: () => `
-<svg xmlns='http://www.w3.org/2000/svg' fill='currentColor' width='32px' height='32px' viewBox='0 0 24 24'>
-<path d='M5.536 21.886a1.004 1.004 0 0 0 1.033-.064l13-9a1 1 0 0 0 0-1.644l-13-9A1 1 0 0 0 5 3v18a1 1 0 0 0 .536.886z'/>
+<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+width="32px" height="32px" viewBox="0 0 30 45">
+<path d="M 2.77 40.814 C 2.789 42.672 5.052 43.677 6.45 42.479 L 26.185 25.042 C 27.558 23.51 27.604 21.578 26.171 20.109 L 6.45 2.688 C 4.709 1.221 2.753 2.26 2.77 4.352 L 2.77 40.814 Z"/>
 </svg>
 `,
 
 close: () => `
-<svg width='100%' height='100%' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg' xml:space='preserve'
-stroke='currentColor' style='fill-rule: evenodd; clip-rule: evenodd; stroke-linecap: round; stroke-linejoin: round;'>
-<g transform='matrix(1.14096,-0.140958,-0.140958,1.14096,-0.0559523,0.0559523)'>
-<path d='M18,6L6.087,17.913' style='fill: none; fill-rule: nonzero; stroke-width: 5px;'/>
+<svg width="100%" height="100%" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" xml:space="preserve"
+stroke="currentColor" style="fill-rule: evenodd; clip-rule: evenodd; stroke-linecap: round; stroke-linejoin: round;">
+<g transform="matrix(1.14096,-0.140958,-0.140958,1.14096,-0.0559523,0.0559523)">
+<path d="M18,6L6.087,17.913" style="fill: none; fill-rule: nonzero; stroke-width: 5px;"/>
 </g>
-<path d='M4.364,4.364L19.636,19.636' style='fill: none; fill-rule: nonzero; stroke-width: 5px;'/>
+<path d="M4.364,4.364L19.636,19.636" style="fill: none; fill-rule: nonzero; stroke-width: 5px;"/>
 </svg>
 `,
 }

@@ -11,13 +11,12 @@
   opacity: 0;
   background: var(--sdimgviewer-background);
   background-repeat: repeat;
-  transition: opacity .2s ease;
+  transition: opacity .15s ease;
   overflow: hidden;
 }
 
 #lightboxModal.display {
   opacity: 1;
-  transition: opacity .25s ease;
 }
 
 #modalWrapper {
@@ -80,15 +79,16 @@
   width: 36px;
   padding: 7px;
   box-shadow: 0 0 5px 1px #000;
-  color: var(--primary-500);
+  color: var(--primary-400);
   background: var(--input-background-fill);
   transition: .2s ease;
   pointer-events: auto;
 }
 
 #lightboxModal > .modalControls > span:hover {
-  color: var(--background-fill-primary);
+  color: var(--body-text-color);
   background: var(--primary-500);
+  filter: drop-shadow(0 0 6px var(--primary-500));
 }
 
 #lightboxModal > .modalControls > span > svg {
@@ -126,7 +126,7 @@
 #lightboxModal > .modalControls > .modalClose:hover {
   color: #fff !important;
   background: red;
-  filter: drop-shadow(0 0 4px red);
+  filter: drop-shadow(0 0 6px red);
 }
 
 #lightboxModal > .modalControls > .modalNext,
@@ -141,8 +141,9 @@
   margin: 0;
   border-radius: 100px;
   box-shadow: 0 0 3px 1px #000;
-  color: var(--primary-500);
+  color: var(--primary-400);
   background: var(--input-background-fill) !important;
+  transform: scale(0);
   pointer-events: auto;
   transition: .2s ease;
 }
@@ -182,6 +183,11 @@
   color: var(--body-text-color);
   background: var(--primary-500) !important;
   filter: drop-shadow(0 0 5px var(--primary-500));
+}
+
+#lightboxModal.display > .modalControls > .modalNext,
+#lightboxModal.display > .modalControls > .modalPrev {
+  transform: scale(1);
 }
 
 #lightboxModal > .modalControls > .modalZoom,
